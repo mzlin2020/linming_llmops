@@ -1,7 +1,21 @@
+import itertools
 import os
+import sqlite3
 import time
 
 import pytest
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
+
+
+@event.listens_for(Engine, "connect")
+def _enable_sqlite_foreign_keys(dbapi_connection, connection_record):
+    """本机用 SQLite 代跑时开启 FK 强制，使 ON DELETE CASCADE 生效（MySQL/InnoDB 原生强制）。
+    对 MySQL 连接是 no-op。"""
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cur = dbapi_connection.cursor()
+        cur.execute("PRAGMA foreign_keys=ON")
+        cur.close()
 
 
 @pytest.fixture(scope="session")
@@ -61,3 +75,38 @@ def make_token(app):
         return pyjwt.encode(payload, secret, algorithm=alg)
 
     return _make
+
+
+@pytest.fixture
+def make_account(app, db_tables):
+    """工厂：建真实 Account 行，返回其 id。teardown 统一删除（供后续 handler 测试复用）。"""
+    from internal.extension.database_extension import db
+    from internal.model import Account
+    from pkg.password import hash_password
+
+    created_ids = []
+    counter = itertools.count(1)
+
+    def _make(email=None, password="pass1234", name="Tester"):
+        email = email or f"user{next(counter)}@test.local"
+        with app.app_context():
+            acc = Account(email=email, password_hash=hash_password(password), name=name)
+            with db.auto_commit():
+                db.session.add(acc)
+            created_ids.append(acc.id)
+            return acc.id
+
+    yield _make
+
+    with app.app_context():
+        for aid in created_ids:
+            obj = db.session.get(Account, aid)
+            if obj is not None:
+                db.session.delete(obj)
+        db.session.commit()
+
+
+@pytest.fixture
+def account(make_account):
+    """单个真实 Account 行，返回其 id。"""
+    return make_account()

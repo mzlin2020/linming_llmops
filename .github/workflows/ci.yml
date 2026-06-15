@@ -8,6 +8,13 @@ jobs:
   backend:
     name: backend (pytest)
     runs-on: ubuntu-latest
+    # MySQL/JWT 连接参数对本 job 所有步骤一致，提到 job 级；各步只覆盖自己独有的库名/服务变量。
+    env:
+      mysql_server_host: 127.0.0.1
+      mysql_server_port: "3306"
+      mysql_server_username: root
+      mysql_server_password: changeme
+      JWT_SECRET: test-secret-please-change
     # 提前接好三件套，Phase 1 的 DB/Redis/Qdrant 集成测试即开即用。
     services:
       mysql:
@@ -53,17 +60,24 @@ jobs:
           done
           echo "qdrant not ready" >&2
           exit 1
+      # Phase 2 R5 闸门：迁移链必须能在真实 MySQL 空库自举（SQLite 测不出 JSON 默认/charset 等差异）。
+      - name: Verify migrations bootstrap clean MySQL
+        working-directory: backend
+        env:
+          mysql_server_database: linming_llmops_migrate
+          FLASK_APP: app.http.app
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -uroot -pchangeme \
+            -e "CREATE DATABASE IF NOT EXISTS linming_llmops_migrate CHARACTER SET utf8mb4"
+          flask db upgrade            # 空库 → 建 account + 25 张 ai_* 表
+          flask db downgrade base     # 全部回滚
+          flask db upgrade            # 再次自举
       - name: Run pytest
         working-directory: backend
         env:
-          mysql_server_host: 127.0.0.1
-          mysql_server_port: "3306"
-          mysql_server_username: root
-          mysql_server_password: changeme
           mysql_server_database: linming_llmops
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: "6379"
-          JWT_SECRET: test-secret-please-change
         run: pytest
 
   frontend:
