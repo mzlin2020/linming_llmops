@@ -42,9 +42,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install dev deps
+      - name: Install deps
         working-directory: backend
-        run: pip install -r requirements-dev.txt
+        run: pip install -r requirements.txt -r requirements-dev.txt
       - name: Wait for Qdrant
         run: |
           for i in $(seq 1 30); do
@@ -55,6 +55,15 @@ jobs:
           exit 1
       - name: Run pytest
         working-directory: backend
+        env:
+          mysql_server_host: 127.0.0.1
+          mysql_server_port: "3306"
+          mysql_server_username: root
+          mysql_server_password: changeme
+          mysql_server_database: linming_llmops
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: "6379"
+          JWT_SECRET: test-secret-please-change
         run: pytest
 
   frontend:

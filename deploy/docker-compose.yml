@@ -65,6 +65,26 @@ services:
     networks:
       - llmops-net
 
+  # 后端 API（Phase 1：骨架 + 自建轻量登录）。celery-worker 容器留 Phase 4。
+  backend:
+    build:
+      context: ../backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MODE: api
+      MIGRATION_ENABLED: "true"
+      FLASK_ENV: ${FLASK_ENV:-production}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:5001:5001"
+    networks:
+      - llmops-net
+
 volumes:
   mysql-data:
   redis-data:

@@ -1,0 +1,7 @@
+Single-database configuration for Flask-Migrate (Alembic).
+
+迁移目录在 internal/migration（由 app 工厂 migrate.init_app(..., directory="internal/migration") 指定）。
+常用命令（FLASK_APP=app.http.app）：
+  flask db upgrade            # 应用迁移到最新
+  flask db migrate -m "msg"   # 按模型变更自动生成新迁移（需人工审阅）
+  flask db downgrade          # 回滚一版
