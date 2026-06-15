@@ -1,0 +1,3 @@
+# Phase 0：最小开发依赖，仅供跑空测试用。
+# 完整运行时依赖清单（requirements.txt）在 Phase 1 加入。
+pytest>=8.0

@@ -1,0 +1,30 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tmp/
+*.egg-info/
+
+# ---- Node ----
+node_modules/
+dist/
+*.local
+
+# ---- Env（提交 *.env.example，忽略真实 .env）----
+.env
+.env.*
+!.env.example
+!*.env.example
+
+# ---- 运行期数据 / 模型缓存 ----
+storage/
+*.log
+
+# ---- OS / 编辑器 ----
+.DS_Store
+.idea/
+.vscode/

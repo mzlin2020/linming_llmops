@@ -1,0 +1,15 @@
+[project]
+name = "linming-llmops-backend"
+version = "0.0.0"
+description = "linming_llmops backend (Flask LLMOps) — scaffold"
+requires-python = ">=3.11"
+
+# Phase 0：仅占位元数据。完整运行时依赖（Flask/SQLAlchemy/Alembic/Celery/
+# langchain/qdrant/sentence-transformers 等）在 Phase 1 加入 requirements.txt。
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v -s"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"

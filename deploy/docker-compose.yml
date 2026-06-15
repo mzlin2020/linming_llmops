@@ -1,0 +1,75 @@
+# linming_llmops —— 基础设施编排（Phase 0：仅 MySQL / Redis / Qdrant）
+#
+# 用法（在仓库根目录执行）：
+#   cp deploy/.env.example deploy/.env   # 按需修改密码等
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d
+#   docker compose -f deploy/docker-compose.yml ps     # mysql/redis 应为 healthy
+#   curl http://127.0.0.1:6333/readyz                  # Qdrant 就绪应返回 200
+#
+# 应用容器（backend / celery / frontend）将在后续阶段加入。
+name: linming-llmops
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-linming_llmops}
+      TZ: ${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      # $$ 转义，使变量在容器内 shell 求值（容器已注入 MYSQL_ROOT_PASSWORD）
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - llmops-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - llmops-net
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    restart: unless-stopped
+    environment:
+      # 留空则不开启鉴权；生产建议在 .env 设一个随机串
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
+      TZ: ${TZ:-UTC}
+    ports:
+      - "127.0.0.1:${QDRANT_PORT:-6333}:6333"
+      - "127.0.0.1:${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+    # 说明：qdrant 官方镜像无 shell/curl，容器内 healthcheck 不可靠，
+    # 故此处不设 healthcheck，改由外部轮询 http://127.0.0.1:6333/readyz 判定就绪。
+    networks:
+      - llmops-net
+
+volumes:
+  mysql-data:
+  redis-data:
+  qdrant-data:
+
+networks:
+  llmops-net:
+    driver: bridge

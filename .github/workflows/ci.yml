@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: backend (pytest)
+    runs-on: ubuntu-latest
+    # 提前接好三件套，Phase 1 的 DB/Redis/Qdrant 集成测试即开即用。
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: changeme
+          MYSQL_DATABASE: linming_llmops
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pchangeme --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+      # qdrant 官方镜像无 shell，无法用 --health-cmd；下方用 /readyz 轮询等待。
+      qdrant:
+        image: qdrant/qdrant:v1.12.4
+        ports:
+          - 6333:6333
+          - 6334:6334
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dev deps
+        working-directory: backend
+        run: pip install -r requirements-dev.txt
+      - name: Wait for Qdrant
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:6333/readyz; then echo "qdrant ready"; exit 0; fi
+            sleep 2
+          done
+          echo "qdrant not ready" >&2
+          exit 1
+      - name: Run pytest
+        working-directory: backend
+        run: pytest
+
+  frontend:
+    name: frontend (vitest + build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+      - name: Test
+        working-directory: frontend
+        run: npm run test
+      - name: Build
+        working-directory: frontend
+        run: npm run build
