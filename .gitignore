@@ -28,3 +28,6 @@ storage/
 .DS_Store
 .idea/
 .vscode/
+
+# ---- 本地专用 Claude Code 指引（含私有源 /code/linMing* 引用，不进开源历史）----
+CLAUDE.md
