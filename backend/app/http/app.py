@@ -30,8 +30,11 @@ app = Http(
     router=injector.get(Router),
 )
 
-# 4. 暴露 celery 让 worker 拿到（Phase 4 注册任务后才有可消费任务）
+# 4. 暴露 celery 让 worker 拿到
 celery = app.extensions["celery"]
+
+# 5. 导入任务模块：注册 @shared_task + worker_ready 启动恢复钩子（web 侧用于 .delay 派发，worker 侧消费）
+from internal import task  # noqa: E402,F401
 
 
 @app.cli.command("seed-bootstrap-account")

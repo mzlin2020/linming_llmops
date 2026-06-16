@@ -99,14 +99,127 @@ def make_account(app, db_tables):
     yield _make
 
     with app.app_context():
-        for aid in created_ids:
-            obj = db.session.get(Account, aid)
-            if obj is not None:
-                db.session.delete(obj)
-        db.session.commit()
+        if created_ids:
+            # ai_* 与 account 无外键（认证解耦），SQLite 删账号后自增 id 会被复用，
+            # 残留业务行会挂到复用 id 的新账号上污染下个用例。故先清掉这些账号名下所有业务行：
+            # 自动发现所有带 user_id 列的表（无需随新增模型手工维护清单），按 FK 依赖逆序（子表先删）。
+            for table in reversed(db.metadata.sorted_tables):
+                if "user_id" in table.columns:
+                    db.session.execute(table.delete().where(table.c.user_id.in_(created_ids)))
+            db.session.query(Account).filter(Account.id.in_(created_ids)).delete(synchronize_session=False)
+            db.session.commit()
 
 
 @pytest.fixture
 def account(make_account):
     """单个真实 Account 行，返回其 id。"""
     return make_account()
+
+
+# ====================== Phase 4：handler 集成测试共享夹具 ======================
+
+@pytest.fixture
+def auth_headers(make_account, make_token):
+    """登录态 Bearer 头：建一个真实 Account，签发其 access JWT。"""
+    aid = make_account()
+    return {"Authorization": f"Bearer {make_token(aid)}"}
+
+
+@pytest.fixture
+def other_headers(make_account, make_token):
+    """第二个、与 auth_headers 不同的账号（用于跨用户归属隔离测试）。"""
+    aid = make_account()
+    return {"Authorization": f"Bearer {make_token(aid)}"}
+
+
+@pytest.fixture
+def no_celery_dispatch(monkeypatch):
+    """把知识库相关 Celery 任务的 .delay 置为 no-op：建文档/重索引/删除后不真正异步派发，
+    改由测试显式同步调用 IndexingService 跑管线（与原异步流程解耦，便于断言中间态）。"""
+    from internal.task import dataset_task, document_task
+
+    for task in (
+        document_task.build_documents,
+        document_task.update_document_enabled,
+        document_task.delete_document,
+        dataset_task.delete_dataset,
+    ):
+        monkeypatch.setattr(task, "delay", lambda *a, **k: None)
+    yield
+
+
+@pytest.fixture
+def redis_or_skip(app):
+    """Redis 可用才继续，否则 skip（本机沙箱无 Redis；CI 有 service 容器）。
+    知识库灌库/片段维护需要 redis（关键词倒排表用 redis 锁、配额限流用 redis 计数）。"""
+    from internal.extension.redis_extension import redis_client
+
+    with app.app_context():
+        try:
+            redis_client.ping()
+        except Exception as exc:  # noqa: BLE001
+            pytest.skip(f"Redis 不可用，跳过（交 CI 跑）：{exc}")
+
+
+# ---------------- 知识库（RAG）核心层 + handler 层共享：假 embedding / Qdrant 守卫 ----------------
+
+_FAKE_EMBED_DIM = 8
+
+
+class _FakeEmbeddings:
+    """确定性假 embedding：同一文本→同一向量（query==某片段文本时 cosine=1，命中该片段）。
+    维度固定 _FAKE_EMBED_DIM，避免单测加载真实嵌入模型（torch/sentence-transformers）。"""
+
+    @staticmethod
+    def _vec(text):
+        import hashlib
+        digest = hashlib.sha256((text or "").encode("utf-8")).digest()
+        return [digest[i % len(digest)] / 255.0 for i in range(_FAKE_EMBED_DIM)]
+
+    def embed_documents(self, texts):
+        return [self._vec(t) for t in texts]
+
+    def embed_query(self, text):
+        return self._vec(text)
+
+
+@pytest.fixture
+def fake_embeddings(monkeypatch):
+    """把 EmbeddingsManager.embeddings / vector_size 换成假实现（不加载真实模型）。"""
+    from internal.core.embeddings.embeddings_manager import EmbeddingsManager
+
+    fake = _FakeEmbeddings()
+    monkeypatch.setattr(EmbeddingsManager, "embeddings", property(lambda self: fake))
+    monkeypatch.setattr(EmbeddingsManager, "vector_size", property(lambda self: _FAKE_EMBED_DIM))
+    return fake
+
+
+@pytest.fixture
+def qdrant_client_or_skip(app):
+    """返回可用的 Qdrant client；连不上则 skip（本机沙箱无 Qdrant，CI 有 service 容器）。"""
+    from internal.core.vector_store.qdrant_vector_store import get_qdrant_client
+
+    with app.app_context():
+        try:
+            client = get_qdrant_client()
+            client.get_collections()
+        except Exception as exc:  # noqa: BLE001
+            pytest.skip(f"Qdrant 不可用，跳过（交 CI 跑）：{exc}")
+        return client
+
+
+@pytest.fixture
+def kb_collection(monkeypatch):
+    """给知识库用一个独立的临时 Qdrant collection（测试维度 8），用完即删，避免污染真实 ai_dataset。"""
+    import uuid
+
+    name = f"ai_dataset_test_{uuid.uuid4().hex[:8]}"
+    monkeypatch.setenv("QDRANT_DATASET_COLLECTION", name)
+    yield name
+    try:
+        from internal.core.vector_store.qdrant_vector_store import get_qdrant_client
+        client = get_qdrant_client()
+        if client.collection_exists(name):
+            client.delete_collection(name)
+    except Exception:
+        pass
