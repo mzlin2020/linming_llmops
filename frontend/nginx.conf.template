@@ -1,0 +1,39 @@
+# 前端 SPA 静态托管 + 反代后端 API/SSE。
+# 容器启动时由 nginx 官方 entrypoint 对本模板做 envsubst（仅替换 BACKEND_* 变量，
+# 见 Dockerfile 的 NGINX_ENVSUBST_FILTER），生成 /etc/nginx/conf.d/default.conf。
+# ${BACKEND_UPSTREAM} 默认 backend:5001，可经 .env 覆盖；其余 $host/$uri 等为 nginx 内置变量，不被替换。
+server {
+    listen       80;
+    server_name  _;
+    root         /usr/share/nginx/html;
+    index        index.html;
+
+    # 带 hash 的构建产物：长缓存、不可变
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SPA 路由回退：未命中的路径一律交给 index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 反代后端 API（含 SSE）。proxy_pass 经 envsubst 替换为静态 host:port，无需运行时 resolver。
+    location /api/ {
+        proxy_pass http://${BACKEND_UPSTREAM};
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Connection        "";
+
+        # SSE 关键：关闭缓冲与缓存，拉长读超时，避免流式回答被攒包/截断
+        proxy_buffering            off;
+        proxy_cache               off;
+        proxy_read_timeout         3600s;
+        chunked_transfer_encoding  off;
+        add_header X-Accel-Buffering no;
+    }
+}

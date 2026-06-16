@@ -1,10 +1,10 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { LogOut, Settings } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { navLinkClass } from "@/components/shared/nav-link";
 import { useAuthStore } from "@/stores/auth-store";
-import { logout as logoutApi } from "@/api/auth";
+import { useLogout } from "@/features/auth/useLogout";
 import { NAV_ITEMS } from "./nav-items";
 
 function linkClass({ isActive }: { isActive: boolean }) {
@@ -13,18 +13,8 @@ function linkClass({ isActive }: { isActive: boolean }) {
 
 /** 顶部水平导航栏:品牌 + 模块入口 + 设置/账户/退出。 */
 export function TopNav() {
-  const navigate = useNavigate();
   const account = useAuthStore((s) => s.account);
-
-  async function handleLogout() {
-    try {
-      await logoutApi();
-    } catch {
-      /* 无状态登出:即便接口失败也丢弃本地令牌 */
-    }
-    useAuthStore.getState().clear();
-    navigate("/login", { replace: true });
-  }
+  const handleLogout = useLogout();
 
   return (
     <header className="flex h-14 items-center gap-2 border-b px-4">
