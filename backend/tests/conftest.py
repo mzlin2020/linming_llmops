@@ -208,6 +208,59 @@ def qdrant_client_or_skip(app):
         return client
 
 
+# ---------------- Chat（4b）：确定性 fake-LLM（不连真实模型/网络） ----------------
+
+class _FakeChatModel:
+    """确定性假 chat model：invoke 返回定值 AIMessage、stream 切成几块 AIMessageChunk，
+    末块带 usage_metadata（仿 OpenAI stream_usage）。供 chat / ai 辅助 / 收尾命名+摘要单测，
+    不加载真实模型、不发网络请求。"""
+
+    def __init__(self, reply: str = "这是来自假模型的回答。", tokens: tuple = (5, 7)):
+        self._reply = reply
+        self._in, self._out = tokens
+
+    def _usage(self) -> dict:
+        return {"input_tokens": self._in, "output_tokens": self._out, "total_tokens": self._in + self._out}
+
+    def invoke(self, messages, **kwargs):
+        from langchain_core.messages import AIMessage
+        return AIMessage(content=self._reply, usage_metadata=self._usage())
+
+    def stream(self, messages, **kwargs):
+        from langchain_core.messages import AIMessageChunk
+        parts = [self._reply[i:i + 4] for i in range(0, len(self._reply), 4)] or [""]
+        last = len(parts) - 1
+        for idx, p in enumerate(parts):
+            yield AIMessageChunk(content=p, usage_metadata=self._usage() if idx == last else None)
+
+    def bind_tools(self, tools, **kwargs):
+        return self
+
+
+@pytest.fixture
+def fake_llm(monkeypatch):
+    """把 LanguageModelManager 的取模型/能力判定换成确定性假实现：
+    instantiate / get_default 返回 _FakeChatModel；supports_vision / supports_tool_call 默认 False
+    （→ chat 走裸 LLM 流，不触 Agent/工具/redis）。需要工具路径或 vision 的用例自行再 monkeypatch。"""
+    from internal.core.language_model.language_model_manager import LanguageModelManager
+
+    fake = _FakeChatModel()
+    monkeypatch.setattr(LanguageModelManager, "instantiate", lambda self, provider, model, **kw: fake)
+    monkeypatch.setattr(LanguageModelManager, "get_default", lambda self: fake)
+    monkeypatch.setattr(LanguageModelManager, "supports_vision", lambda self, p, m: False)
+    monkeypatch.setattr(LanguageModelManager, "supports_tool_call", lambda self, p, m: False)
+    return fake
+
+
+@pytest.fixture
+def no_after_round_dispatch(monkeypatch):
+    """把对话收尾任务 after_round_task.delay 置 no-op（不真正异步派发；用例需要时显式直调 after_round）。"""
+    from internal.task import conversation_task
+
+    monkeypatch.setattr(conversation_task.after_round_task, "delay", lambda *a, **k: None)
+    yield
+
+
 @pytest.fixture
 def kb_collection(monkeypatch):
     """给知识库用一个独立的临时 Qdrant collection（测试维度 8），用完即删，避免污染真实 ai_dataset。"""

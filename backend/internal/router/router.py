@@ -5,7 +5,11 @@ from injector import inject
 
 from internal.handler import (
     AccountHandler,
+    AIHandler,
+    AppHandler,
+    AssistantAgentHandler,
     AuthHandler,
+    ConversationHandler,
     DatasetHandler,
     DocumentHandler,
     PingHandler,
@@ -24,6 +28,10 @@ class Router:
     dataset_handler: DatasetHandler
     document_handler: DocumentHandler
     segment_handler: SegmentHandler
+    app_handler: AppHandler
+    conversation_handler: ConversationHandler
+    ai_handler: AIHandler
+    assistant_agent_handler: AssistantAgentHandler
 
     def register_router(self, app: Flask):
         bp = Blueprint("api", __name__, url_prefix="/api")
@@ -93,5 +101,105 @@ class Router:
                         view_func=self.segment_handler.update_segment_enabled, methods=["POST"])
         bp.add_url_rule("/datasets/<int:dataset_id>/documents/<int:document_id>/segments/<int:segment_id>/delete",
                         view_func=self.segment_handler.delete_segment, methods=["POST"])
+
+        # ---------- 应用：基础 CRUD ----------
+        bp.add_url_rule("/apps", view_func=self.app_handler.list_apps, methods=["GET"])
+        bp.add_url_rule("/apps", view_func=self.app_handler.create_app, methods=["POST"])
+        # /apps/default 为静态段，先于 /<int:app_id> 注册（int 转换器不匹配 'default'，此处仅为清晰）
+        bp.add_url_rule("/apps/default", view_func=self.app_handler.default, methods=["GET"])
+        bp.add_url_rule("/apps/<int:app_id>", view_func=self.app_handler.get_app, methods=["GET"])
+        bp.add_url_rule("/apps/<int:app_id>", view_func=self.app_handler.update_app, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/delete", view_func=self.app_handler.delete_app, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/copy", view_func=self.app_handler.copy_app, methods=["POST"])
+
+        # ---------- 应用：草稿配置 / 发布 / 版本历史 ----------
+        bp.add_url_rule("/apps/<int:app_id>/draft-app-config",
+                        view_func=self.app_handler.get_draft_app_config, methods=["GET"])
+        bp.add_url_rule("/apps/<int:app_id>/draft-app-config", endpoint="update_draft_app_config",
+                        view_func=self.app_handler.update_draft_app_config, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/publish",
+                        view_func=self.app_handler.publish, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/cancel-publish",
+                        view_func=self.app_handler.cancel_publish, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/publish-histories",
+                        view_func=self.app_handler.get_publish_histories, methods=["GET"])
+        bp.add_url_rule("/apps/<int:app_id>/fallback-history",
+                        view_func=self.app_handler.fallback_history, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/published-config",
+                        view_func=self.app_handler.get_published_config, methods=["GET"])
+
+        # ---------- 公共应用商店（发布到商店：任意登录用户对自己已发布的应用）----------
+        bp.add_url_rule("/apps/<int:app_id>/store-publish",
+                        view_func=self.app_handler.publish_app_to_store, methods=["POST"])
+        bp.add_url_rule("/app-store",
+                        view_func=self.app_handler.get_app_store, methods=["GET"])
+        bp.add_url_rule("/app-store/<int:public_id>/add",
+                        view_func=self.app_handler.add_store_app_to_me, methods=["POST"])
+
+        # ---------- Chat（调试，读草稿配置；SSE）----------
+        bp.add_url_rule("/apps/<int:app_id>/conversations",
+                        view_func=self.app_handler.debug_chat, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/conversations/complete",
+                        view_func=self.app_handler.complete_chat, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/conversations/tasks/<string:task_id>/stop",
+                        view_func=self.app_handler.stop_debug_chat, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/conversations/messages",
+                        view_func=self.app_handler.debug_messages, methods=["GET"])
+        bp.add_url_rule("/apps/<int:app_id>/conversations/delete-debug-conversation",
+                        view_func=self.app_handler.delete_debug_conversation, methods=["POST"])
+
+        # ---------- 与已发布应用对话（读已发布配置；SSE）----------
+        bp.add_url_rule("/apps/<int:app_id>/published-conversations",
+                        view_func=self.app_handler.published_chat, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/published-conversations/complete",
+                        view_func=self.app_handler.published_complete, methods=["POST"])
+        bp.add_url_rule("/apps/<int:app_id>/published-conversations/messages",
+                        view_func=self.app_handler.published_messages, methods=["GET"])
+        bp.add_url_rule("/apps/<int:app_id>/published-conversations/clear",
+                        view_func=self.app_handler.clear_published_conversation, methods=["POST"])
+
+        # ---------- 长期记忆 ----------
+        bp.add_url_rule("/apps/<int:app_id>/summary",
+                        view_func=self.app_handler.get_summary, methods=["GET"])
+        bp.add_url_rule("/apps/<int:app_id>/summary",
+                        view_func=self.app_handler.update_summary, methods=["POST"])
+
+        # ---------- AI 辅助 ----------
+        bp.add_url_rule("/ai/optimize-preset-prompt",
+                        view_func=self.ai_handler.optimize_preset_prompt, methods=["POST"])
+        bp.add_url_rule("/ai/suggested-opening-questions",
+                        view_func=self.ai_handler.suggest_opening_questions, methods=["POST"])
+        bp.add_url_rule("/ai/suggested-questions",
+                        view_func=self.ai_handler.suggest_questions, methods=["POST"])
+
+        # ---------- 辅助 Agent（单会话；endpoint 加 assistant_agent_ 前缀，避免与 conversation 同名方法撞车）----------
+        bp.add_url_rule("/assistant-agent/chat", endpoint="assistant_agent_chat",
+                        view_func=self.assistant_agent_handler.chat, methods=["POST"])
+        bp.add_url_rule("/assistant-agent/chat/complete", endpoint="assistant_agent_complete",
+                        view_func=self.assistant_agent_handler.complete, methods=["POST"])
+        bp.add_url_rule("/assistant-agent/chat/<string:task_id>/stop", endpoint="assistant_agent_stop",
+                        view_func=self.assistant_agent_handler.stop, methods=["POST"])
+        bp.add_url_rule("/assistant-agent/messages", endpoint="assistant_agent_messages",
+                        view_func=self.assistant_agent_handler.messages, methods=["GET"])
+        bp.add_url_rule("/assistant-agent/delete-conversation", endpoint="assistant_agent_delete_conversation",
+                        view_func=self.assistant_agent_handler.delete_conversation, methods=["POST"])
+
+        # ---------- 会话 / 消息 ----------
+        bp.add_url_rule("/conversations",
+                        view_func=self.conversation_handler.list_conversations, methods=["GET"])
+        bp.add_url_rule("/conversations/<int:conversation_id>",
+                        view_func=self.conversation_handler.get_conversation, methods=["GET"])
+        bp.add_url_rule("/conversations/<int:conversation_id>/name",
+                        view_func=self.conversation_handler.get_name, methods=["GET"])
+        bp.add_url_rule("/conversations/<int:conversation_id>/name",
+                        view_func=self.conversation_handler.update_name, methods=["POST"])
+        bp.add_url_rule("/conversations/<int:conversation_id>/is-pinned",
+                        view_func=self.conversation_handler.update_is_pinned, methods=["POST"])
+        bp.add_url_rule("/conversations/<int:conversation_id>/delete",
+                        view_func=self.conversation_handler.delete_conversation, methods=["POST"])
+        bp.add_url_rule("/conversations/<int:conversation_id>/messages",
+                        view_func=self.conversation_handler.list_messages, methods=["GET"])
+        bp.add_url_rule("/conversations/<int:conversation_id>/messages/<int:message_id>/delete",
+                        view_func=self.conversation_handler.delete_message, methods=["POST"])
 
         app.register_blueprint(bp)

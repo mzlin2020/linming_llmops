@@ -140,6 +140,7 @@ class Config:
         self.QUOTA_OPENAPI_DAILY_LIMIT = int(_get_env("QUOTA_OPENAPI_DAILY_LIMIT"))
 
         # AI 聊天附件（图片多模态 + 文档文本注入）
+        self.CHAT_ATTACHMENT_URL_PREFIXES = _get_env("CHAT_ATTACHMENT_URL_PREFIXES")
         self.CHAT_MAX_IMAGES_PER_MESSAGE = int(_get_env("CHAT_MAX_IMAGES_PER_MESSAGE"))
         self.CHAT_MAX_FILES_PER_MESSAGE = int(_get_env("CHAT_MAX_FILES_PER_MESSAGE"))
         self.CHAT_DOC_DOWNLOAD_MAX_BYTES = int(_get_env("CHAT_DOC_DOWNLOAD_MAX_BYTES"))

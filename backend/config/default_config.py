@@ -104,6 +104,8 @@ DEFAULT_CONFIG = {
     "QUOTA_OPENAPI_DAILY_LIMIT": 30,
 
     # AI 聊天附件（图片多模态 + 文档文本注入）
+    # 附件 URL 白名单前缀（逗号分隔）：默认空 = 不放行任何外部附件 URL，需显式配置允许的存储域前缀。
+    "CHAT_ATTACHMENT_URL_PREFIXES": "",
     "CHAT_MAX_IMAGES_PER_MESSAGE": 3,
     "CHAT_MAX_FILES_PER_MESSAGE": 2,
     "CHAT_DOC_DOWNLOAD_MAX_BYTES": 10485760,  # 10MB

@@ -10,6 +10,13 @@ from .indexing_service import IndexingService
 from .dataset_service import DatasetService
 from .document_service import DocumentService
 from .segment_service import SegmentService
+from .api_tool_service import ApiToolService
+from .app_config_service import AppConfigService
+from .app_service import AppService
+from .conversation_service import ConversationService
+from .chat_service import ChatService
+from .ai_service import AIService
+from .assistant_agent_service import AssistantAgentService
 
 __all__ = [
     "AccountService",
@@ -25,4 +32,12 @@ __all__ = [
     "DatasetService",
     "DocumentService",
     "SegmentService",
+    # 应用编排 / 对话 / Chat / AI 辅助 / 辅助 Agent
+    "ApiToolService",
+    "AppConfigService",
+    "AppService",
+    "ConversationService",
+    "ChatService",
+    "AIService",
+    "AssistantAgentService",
 ]
