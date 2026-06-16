@@ -1,6 +1,6 @@
-# Phase 1 运行时依赖：web / db / auth 栈。
-# 重型 AI 依赖（langchain*/langgraph/qdrant/sentence-transformers/torch/transformers/
-# pypdf/jieba/tiktoken 等）在 Phase 3 移植核心引擎时加入。
+# 运行时依赖（轻量，可在无 GPU 环境直接安装）：web / db / auth 栈 + Phase 3 核心引擎的纯 Python 依赖。
+# 重型 ML 嵌入栈（torch / transformers / sentence-transformers / langchain-huggingface，约 +1.5GB）
+# 单列在 requirements-ml.txt，仅生产/一键部署需要真实本地嵌入时才安装；测试用 fake 替身不加载。
 flask>=3.1,<4
 flask-sqlalchemy>=3.1,<4
 flask-migrate>=4.1,<5
@@ -23,3 +23,21 @@ concurrent-log-handler>=0.9
 
 python-dotenv>=1.0
 PyYAML>=6.0
+
+# ===== Phase 3a：核心 AI 引擎（LangChain 主线 + 向量库 + RAG 解析，均纯 Python）=====
+langchain>=1.3,<2
+langchain-core>=1.3,<2
+langchain-community>=0.4,<1       # TextLoader / CSVLoader / PyPDFLoader / Docx2txtLoader
+langchain-openai>=0.2             # protocol=openai（OpenAI 兼容上游，默认）
+langchain-anthropic>=0.3          # protocol=anthropic（Anthropic 原生面 / 中转）
+langchain-qdrant>=0.2
+qdrant-client>=1.12               # 向量库客户端
+
+# 知识库 / RAG
+jieba>=0.42                       # 全文检索分词 + TF-IDF 关键词抽取
+pypdf>=4.0                        # PDF（PyPDFLoader）
+docx2txt>=0.8                     # Word docx（Docx2txtLoader）
+openpyxl>=3.1                     # Excel xlsx（自实现单元格读取）
+
+# 文本 / token 工具
+tiktoken>=0.8

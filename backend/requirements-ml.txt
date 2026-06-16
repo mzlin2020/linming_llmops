@@ -1,0 +1,11 @@
+# 重型本地嵌入栈（约 +1.5GB，首次会下载模型权重到 HF 缓存）。
+# 仅当需要用真实本地 embedding 跑知识库向量化时安装；测试用 fake_embeddings 不加载这些，
+# CI 也不安装本文件（核心测试走假替身）。一键部署/生产：在镜像里 pip install -r requirements-ml.txt。
+#
+# 默认嵌入模型 BAAI/bge-small-zh-v1.5（512 维，CPU 可跑）；换模型同步改 EMBEDDING_MODEL / EMBEDDING_VECTOR_SIZE。
+-r requirements.txt
+
+langchain-huggingface>=0.1
+sentence-transformers>=2.7
+transformers>=4.51
+torch>=2.2                        # CPU 轮子即可
