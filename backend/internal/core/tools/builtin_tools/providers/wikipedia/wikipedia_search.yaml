@@ -1,0 +1,4 @@
+name: wikipedia_search
+label: 维基百科搜索
+description: 一个用于执行维基百科搜索并提取词条摘要的工具。当你需要查询百科知识、人物、概念时可以使用，输入是一个关键词或主题。
+params: []

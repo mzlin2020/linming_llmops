@@ -1,0 +1,4 @@
+name: google_serper
+label: 谷歌 Serper 搜索
+description: 一个低成本的谷歌搜索 API。当你需要搜索时事信息时可以使用该工具，输入是一个查询语句。
+params: []

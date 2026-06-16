@@ -1,0 +1,4 @@
+name: duckduckgo_search
+label: DuckDuckGo 搜索
+description: 一个注重隐私的搜索引擎，无需 API key。当你需要搜索时事信息时可以使用该工具，输入是一个查询语句。
+params: []

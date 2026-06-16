@@ -1,0 +1,9 @@
+- category: search
+  name: 网络搜索
+  icon: search.svg
+- category: weather
+  name: 天气预报
+  icon: weather.svg
+- category: tool
+  name: 实用工具
+  icon: tool.svg
