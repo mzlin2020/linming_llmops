@@ -1,3 +1,4 @@
+import { historyToMessages } from "@/features/chat/chat-core";
 import { get, post } from "@/lib/http/client";
 import type { PageResult } from "@/types/api";
 
@@ -6,31 +7,8 @@ import type { ChatMessage, HistoryRound } from "./types";
 /** SSE 流式聊天端点（POST，经 streamSSE，不走 axios）。 */
 export const CHAT_URL = "/assistant-agent/chat";
 
-/** 后端单轮状态 → UI 助手气泡状态。 */
-function mapRoundStatus(status: string): ChatMessage["status"] {
-  if (status === "stop") return "stopped";
-  if (status === "error") return "error";
-  return "done";
-}
-
-/**
- * 把后端「一轮」列表拆成正序的 UI 气泡序列：每轮 → user(query) + assistant(answer)。
- * 后端按 created_at 倒序返回，故先 reverse 成时间正序。纯函数，便于单测。
- */
-export function historyToMessages(rounds: HistoryRound[]): ChatMessage[] {
-  const out: ChatMessage[] = [];
-  for (const r of [...rounds].reverse()) {
-    out.push({ key: `h-${r.id}-user`, role: "user", content: r.query, status: "done" });
-    const status = mapRoundStatus(r.status);
-    out.push({
-      key: `h-${r.id}-assistant`,
-      role: "assistant",
-      content: r.answer || (status === "error" ? r.error : ""),
-      status,
-    });
-  }
-  return out;
-}
+/** 拆轮纯函数收口在 chat-core，转出以保持既有引用路径与单测不变。 */
+export { historyToMessages };
 
 /** 拉当前会话最新一页历史；无会话时后端返回空页。 */
 export async function fetchHistory(): Promise<ChatMessage[]> {

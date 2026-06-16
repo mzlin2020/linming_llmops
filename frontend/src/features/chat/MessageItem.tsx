@@ -5,7 +5,10 @@ import remarkGfm from "remark-gfm";
 import { cn } from "@/lib/utils";
 
 import { AiBadge } from "./AiBadge";
-import type { ChatMessage } from "./types";
+import type { ChatMessage } from "./chat-core";
+
+// 模块级常量：避免每次渲染新建数组（MessageItem 已 memo，新数组会削弱其稳定性）。
+const REMARK_PLUGINS = [remarkGfm];
 
 /** 助手 Markdown 排版：无 typography 插件，用 arbitrary variants 自带一套紧凑样式。 */
 const MARKDOWN_PROSE = cn(
@@ -58,7 +61,7 @@ export const MessageItem = memo(function MessageItem({ message }: { message: Cha
           </p>
         ) : (
           <div className={cn(MARKDOWN_PROSE, message.status === "error" && "text-destructive/90")}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{message.content}</ReactMarkdown>
             {streaming && <Caret />}
           </div>
         )}

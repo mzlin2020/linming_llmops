@@ -2,7 +2,10 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import { AppShell } from "@/app-shell/AppShell";
 import { Placeholder } from "@/components/shared/Placeholder";
-import { AppsPage } from "@/features/apps/AppsPage";
+import { AppsLayout } from "@/features/apps/AppsLayout";
+import { AppsListView } from "@/features/apps/AppsListView";
+import { OrchestrationPage } from "@/features/apps/orchestrate/OrchestrationPage";
+import { AppStoreView } from "@/features/apps/store/AppStoreView";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { RegisterPage } from "@/features/auth/RegisterPage";
 import { DatasetsListView } from "@/features/datasets/DatasetsListView";
@@ -32,7 +35,19 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <HomePage /> },
-      { path: "apps/*", element: <AppsPage /> },
+      {
+        path: "apps",
+        children: [
+          {
+            element: <AppsLayout />,
+            children: [
+              { index: true, element: <AppsListView /> },
+              { path: "store", element: <AppStoreView /> },
+            ],
+          },
+          { path: ":id", element: <OrchestrationPage /> },
+        ],
+      },
       {
         path: "plugins",
         element: <PluginsLayout />,
