@@ -17,6 +17,12 @@ from .conversation_service import ConversationService
 from .chat_service import ChatService
 from .ai_service import AIService
 from .assistant_agent_service import AssistantAgentService
+from .api_key_service import ApiKeyService
+from .language_model_service import LanguageModelService
+from .builtin_tool_service import BuiltinToolService
+from .stats_service import StatsService
+from .llm_admin_service import LlmAdminService
+from .openapi_service import OpenAPIService
 
 __all__ = [
     "AccountService",
@@ -40,4 +46,11 @@ __all__ = [
     "ChatService",
     "AIService",
     "AssistantAgentService",
+    # 模型目录 / 工具目录 / 统计 / 开放 API（4c）
+    "ApiKeyService",
+    "LanguageModelService",
+    "BuiltinToolService",
+    "StatsService",
+    "LlmAdminService",
+    "OpenAPIService",
 ]

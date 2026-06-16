@@ -261,6 +261,41 @@ def no_after_round_dispatch(monkeypatch):
     yield
 
 
+# ---------------- 开放 API / API-Key（4c）共享夹具 ----------------
+
+@pytest.fixture
+def make_api_key(app, make_account):
+    """工厂：为某账号签发一把 API key，返回明文 key 串（account_id 缺省则新建账号）。"""
+    from internal.service import ApiKeyService
+
+    svc = ApiKeyService()
+
+    def _make(account_id=None):
+        if account_id is None:
+            account_id = make_account()
+        with app.app_context():
+            rec = svc.create(type("_U", (), {"id": account_id})())
+            return rec.api_key
+
+    return _make
+
+
+@pytest.fixture
+def make_end_user(app):
+    """工厂：为 (account, app) 建一条 EndUser，返回其 id。"""
+    from internal.extension.database_extension import db
+    from internal.model import EndUser
+
+    def _make(account_id, app_id):
+        with app.app_context():
+            eu = EndUser(user_id=account_id, app_id=app_id)
+            with db.auto_commit():
+                db.session.add(eu)
+            return eu.id
+
+    return _make
+
+
 @pytest.fixture
 def kb_collection(monkeypatch):
     """给知识库用一个独立的临时 Qdrant collection（测试维度 8），用完即删，避免污染真实 ai_dataset。"""

@@ -6,14 +6,21 @@ from injector import inject
 from internal.handler import (
     AccountHandler,
     AIHandler,
+    ApiKeyHandler,
+    ApiToolHandler,
     AppHandler,
     AssistantAgentHandler,
     AuthHandler,
+    BuiltinToolHandler,
     ConversationHandler,
     DatasetHandler,
     DocumentHandler,
+    LanguageModelHandler,
+    LlmAdminHandler,
+    OpenAPIHandler,
     PingHandler,
     SegmentHandler,
+    StatsHandler,
     UploadFileHandler,
 )
 
@@ -32,6 +39,14 @@ class Router:
     conversation_handler: ConversationHandler
     ai_handler: AIHandler
     assistant_agent_handler: AssistantAgentHandler
+    # 模型目录 / 工具目录 / 统计 / 插件 / 模型管理 / 开放 API（4c）
+    api_key_handler: ApiKeyHandler
+    language_model_handler: LanguageModelHandler
+    builtin_tool_handler: BuiltinToolHandler
+    stats_handler: StatsHandler
+    api_tool_handler: ApiToolHandler
+    llm_admin_handler: LlmAdminHandler
+    openapi_handler: OpenAPIHandler
 
     def register_router(self, app: Flask):
         bp = Blueprint("api", __name__, url_prefix="/api")
@@ -202,4 +217,93 @@ class Router:
         bp.add_url_rule("/conversations/<int:conversation_id>/messages/<int:message_id>/delete",
                         view_func=self.conversation_handler.delete_message, methods=["POST"])
 
+        # ---------- 全站统计（public）----------
+        bp.add_url_rule("/stats", view_func=self.stats_handler.get_site_stats, methods=["GET"])
+
+        # ---------- 语言模型目录（只读，需登录；/icon 静态段先于 /<model> 通配）----------
+        bp.add_url_rule("/language-models",
+                        view_func=self.language_model_handler.list_models, methods=["GET"])
+        bp.add_url_rule("/language-models/<string:provider>",
+                        view_func=self.language_model_handler.get_provider, methods=["GET"])
+        bp.add_url_rule("/language-models/<string:provider>/icon", endpoint="language_model_provider_icon",
+                        view_func=self.language_model_handler.get_provider_icon, methods=["GET"])
+        bp.add_url_rule("/language-models/<string:provider>/<string:model>",
+                        view_func=self.language_model_handler.get_model, methods=["GET"])
+
+        # ---------- 内置工具目录（只读，需登录）----------
+        bp.add_url_rule("/builtin-tools",
+                        view_func=self.builtin_tool_handler.get_builtin_tools, methods=["GET"])
+        bp.add_url_rule("/builtin-tools/categories",
+                        view_func=self.builtin_tool_handler.get_categories, methods=["GET"])
+        bp.add_url_rule("/builtin-tools/<string:provider>/tools/<string:tool>",
+                        view_func=self.builtin_tool_handler.get_provider_tool, methods=["GET"])
+        bp.add_url_rule("/builtin-tools/<string:provider>/icon", endpoint="builtin_tool_provider_icon",
+                        view_func=self.builtin_tool_handler.get_provider_icon, methods=["GET"])
+
+        # ---------- 自定义 API 工具 / 插件（需登录，user_id 隔离）----------
+        bp.add_url_rule("/api-tools",
+                        view_func=self.api_tool_handler.get_api_tool_providers_with_page, methods=["GET"])
+        bp.add_url_rule("/api-tools", endpoint="create_api_tool_provider",
+                        view_func=self.api_tool_handler.create_api_tool_provider, methods=["POST"])
+        bp.add_url_rule("/api-tools/validate-openapi-schema",
+                        view_func=self.api_tool_handler.validate_openapi_schema, methods=["POST"])
+        bp.add_url_rule("/api-tools/<int:provider_id>",
+                        view_func=self.api_tool_handler.get_api_tool_provider, methods=["GET"])
+        bp.add_url_rule("/api-tools/<int:provider_id>", endpoint="update_api_tool_provider",
+                        view_func=self.api_tool_handler.update_api_tool_provider, methods=["POST"])
+        bp.add_url_rule("/api-tools/<int:provider_id>/delete",
+                        view_func=self.api_tool_handler.delete_api_tool_provider, methods=["POST"])
+        bp.add_url_rule("/api-tools/<int:provider_id>/publish",
+                        view_func=self.api_tool_handler.publish_api_tool_provider, methods=["POST"])
+        bp.add_url_rule("/api-tools/<int:provider_id>/tools/<string:tool_name>",
+                        view_func=self.api_tool_handler.get_api_tool, methods=["GET"])
+        bp.add_url_rule("/plugin-store",
+                        view_func=self.api_tool_handler.get_plugin_store, methods=["GET"])
+        bp.add_url_rule("/plugin-store/<int:public_id>/add",
+                        view_func=self.api_tool_handler.add_plugin_to_me, methods=["POST"])
+
+        # ---------- 开放 API 密钥（需登录，account 自管自己的密钥）----------
+        bp.add_url_rule("/api-keys",
+                        view_func=self.api_key_handler.list_keys, methods=["GET"])
+        bp.add_url_rule("/api-keys", endpoint="create_api_key",
+                        view_func=self.api_key_handler.create_key, methods=["POST"])
+        bp.add_url_rule("/api-keys/<int:key_id>",
+                        view_func=self.api_key_handler.update_key, methods=["POST"])
+        bp.add_url_rule("/api-keys/<int:key_id>/delete",
+                        view_func=self.api_key_handler.delete_key, methods=["POST"])
+
+        # ---------- AI 模型目录管理（写入面，ENABLE_LLM_ADMIN 守护；只读目录走 /language-models）----------
+        bp.add_url_rule("/admin/llm-protocols",
+                        view_func=self.llm_admin_handler.list_protocols, methods=["GET"])
+        bp.add_url_rule("/admin/llm-providers",
+                        view_func=self.llm_admin_handler.list_providers, methods=["GET"])
+        bp.add_url_rule("/admin/llm-providers", endpoint="create_llm_provider",
+                        view_func=self.llm_admin_handler.create_provider, methods=["POST"])
+        bp.add_url_rule("/admin/llm-providers/<int:provider_id>", endpoint="update_llm_provider",
+                        view_func=self.llm_admin_handler.update_provider, methods=["POST"])
+        bp.add_url_rule("/admin/llm-providers/<int:provider_id>/delete",
+                        view_func=self.llm_admin_handler.delete_provider, methods=["POST"])
+        bp.add_url_rule("/admin/llm-providers/<int:provider_id>/models",
+                        view_func=self.llm_admin_handler.create_model, methods=["POST"])
+        bp.add_url_rule("/admin/llm-providers/<int:provider_id>/channels",
+                        view_func=self.llm_admin_handler.list_channels, methods=["GET"])
+        bp.add_url_rule("/admin/llm-providers/<int:provider_id>/channels", endpoint="create_llm_channel",
+                        view_func=self.llm_admin_handler.create_channel, methods=["POST"])
+        bp.add_url_rule("/admin/llm-models/<int:model_id>", endpoint="update_llm_model",
+                        view_func=self.llm_admin_handler.update_model, methods=["POST"])
+        bp.add_url_rule("/admin/llm-models/<int:model_id>/delete",
+                        view_func=self.llm_admin_handler.delete_model, methods=["POST"])
+        bp.add_url_rule("/admin/llm-channels/<int:channel_id>", endpoint="update_llm_channel",
+                        view_func=self.llm_admin_handler.update_channel, methods=["POST"])
+        bp.add_url_rule("/admin/llm-channels/<int:channel_id>/delete",
+                        view_func=self.llm_admin_handler.delete_channel, methods=["POST"])
+        bp.add_url_rule("/admin/llm-channels/<int:channel_id>/recover",
+                        view_func=self.llm_admin_handler.recover_channel, methods=["POST"])
+
         app.register_blueprint(bp)
+
+        # ---------- 开放 API（独立蓝图 openapi，用 API-Key 鉴权；中间件按 blueprint 分流）----------
+        openapi_bp = Blueprint("openapi", __name__, url_prefix="/api/openapi")
+        openapi_bp.add_url_rule("/chat", view_func=self.openapi_handler.chat, methods=["POST"])
+        openapi_bp.add_url_rule("/app-info", view_func=self.openapi_handler.app_info, methods=["GET"])
+        app.register_blueprint(openapi_bp)

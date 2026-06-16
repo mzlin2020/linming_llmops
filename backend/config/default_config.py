@@ -89,6 +89,10 @@ DEFAULT_CONFIG = {
 
     # 开放 API 单次对话最多回溯的历史轮数（服务端变量，调用方不可覆盖）
     "OPENAPI_HISTORY_MAX_TURNS": 3,
+    # 开放 API 密钥前缀（中性默认，env 可改；用于客户端识别版本）
+    "API_KEY_PREFIX": "ak-v1/",
+    # AI 模型目录管理写入面开关（全局共享目录含凭证，默认关；单运维部署可开启）
+    "ENABLE_LLM_ADMIN": "false",
 
     # 知识库配额/限流（无管理员概念，对所有账号统一）
     "QUOTA_MAX_DATASETS_PER_USER": 3,

@@ -125,6 +125,10 @@ class Config:
 
         # 开放 API 历史轮数上限（仅约束 service_api 链路；调用方不可覆盖）
         self.OPENAPI_HISTORY_MAX_TURNS = int(_get_env("OPENAPI_HISTORY_MAX_TURNS"))
+        # 开放 API 密钥前缀（中性默认，env 可改）
+        self.API_KEY_PREFIX = _get_env("API_KEY_PREFIX")
+        # AI 模型目录管理写入面开关（部署级特性开关，默认关）
+        self.ENABLE_LLM_ADMIN = _get_bool_env("ENABLE_LLM_ADMIN")
 
         # 知识库配额/限流（无管理员概念，对所有账号统一生效）
         self.QUOTA_MAX_DATASETS_PER_USER = int(_get_env("QUOTA_MAX_DATASETS_PER_USER"))
