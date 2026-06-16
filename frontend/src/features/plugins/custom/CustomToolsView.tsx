@@ -6,6 +6,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { deleteApiTool, listApiTools, publishApiTool } from "@/api/plugins";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Pagination } from "@/components/shared/Pagination";
+import { QueryGrid } from "@/components/shared/QueryGrid";
 import { SearchInput } from "@/components/shared/SearchInput";
 import { ToolIcon } from "@/components/shared/ToolIcon";
 import { Button } from "@/components/ui/button";
@@ -59,54 +60,50 @@ export function CustomToolsView() {
         </Button>
       </div>
 
-      {query.isLoading ? (
-        <p className="text-sm text-muted-foreground">加载中…</p>
-      ) : list.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">
-          还没有自定义插件，点「新建插件」开始。
-        </p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((p) => (
-            <div key={p.id} className="flex flex-col gap-3 rounded-lg border p-4">
-              <div className="flex items-start gap-3">
-                <ToolIcon src={p.icon} alt={p.name} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{p.name}</p>
-                  <p className="line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {p.tools.length} 个工具{p.is_public && " · 已上架"}
-              </p>
-              <div className="mt-auto flex items-center gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link to={`/plugins/custom/${p.id}`} aria-label={`编辑 ${p.name}`}>
-                    <Pencil className="h-4 w-4" /> 编辑
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => publishMutation.mutate({ id: p.id, is_public: !p.is_public })}
-                  disabled={publishMutation.isPending}
-                >
-                  {p.is_public ? "下架" : "上架"}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="ml-auto text-muted-foreground"
-                  onClick={() => setPendingDelete(p)}
-                  aria-label={`删除 ${p.name}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+      <QueryGrid
+        isLoading={query.isLoading}
+        items={list}
+        emptyText="还没有自定义插件，点「新建插件」开始。"
+      >
+        {(p) => (
+          <div key={p.id} className="flex flex-col gap-3 rounded-lg border p-4">
+            <div className="flex items-start gap-3">
+              <ToolIcon src={p.icon} alt={p.name} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium">{p.name}</p>
+                <p className="line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+            <p className="text-xs text-muted-foreground">
+              {p.tools.length} 个工具{p.is_public && " · 已上架"}
+            </p>
+            <div className="mt-auto flex items-center gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/plugins/custom/${p.id}`} aria-label={`编辑 ${p.name}`}>
+                  <Pencil className="h-4 w-4" /> 编辑
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => publishMutation.mutate({ id: p.id, is_public: !p.is_public })}
+                disabled={publishMutation.isPending}
+              >
+                {p.is_public ? "下架" : "上架"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-auto text-muted-foreground"
+                onClick={() => setPendingDelete(p)}
+                aria-label={`删除 ${p.name}`}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </QueryGrid>
 
       {query.data && <Pagination paginator={query.data.paginator} onChange={setPage} />}
 

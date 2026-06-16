@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { listBuiltinCategories, listBuiltinTools } from "@/api/plugins";
+import { QueryGrid } from "@/components/shared/QueryGrid";
 import { ToolIcon } from "@/components/shared/ToolIcon";
 import { cn } from "@/lib/utils";
 
@@ -37,47 +38,41 @@ export function BuiltinToolsView() {
         ))}
       </div>
 
-      {toolsQuery.isLoading ? (
-        <p className="text-sm text-muted-foreground">加载中…</p>
-      ) : filtered.length === 0 ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">该分类暂无内置工具。</p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((p) => {
-            const open = expanded === p.name;
-            return (
-              <div key={p.name} className="flex flex-col gap-3 rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <ToolIcon svg={svgByCategory.get(p.category)} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{p.label || p.name}</p>
-                    <p className="line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
-                  </div>
+      <QueryGrid isLoading={toolsQuery.isLoading} items={filtered} emptyText="该分类暂无内置工具。">
+        {(p) => {
+          const open = expanded === p.name;
+          return (
+            <div key={p.name} className="flex flex-col gap-3 rounded-lg border p-4">
+              <div className="flex items-start gap-3">
+                <ToolIcon svg={svgByCategory.get(p.category)} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{p.label || p.name}</p>
+                  <p className="line-clamp-2 text-xs text-muted-foreground">{p.description}</p>
                 </div>
-                <button
-                  type="button"
-                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => setExpanded(open ? null : p.name)}
-                  aria-expanded={open}
-                >
-                  {p.tools.length} 个工具
-                  {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-                {open && (
-                  <ul className="space-y-1 border-t pt-2">
-                    {p.tools.map((t) => (
-                      <li key={t.name} className="text-sm">
-                        <span className="font-medium">{t.label || t.name}</span>
-                        <span className="block text-xs text-muted-foreground">{t.description}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setExpanded(open ? null : p.name)}
+                aria-expanded={open}
+              >
+                {p.tools.length} 个工具
+                {open ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              </button>
+              {open && (
+                <ul className="space-y-1 border-t pt-2">
+                  {p.tools.map((t) => (
+                    <li key={t.name} className="text-sm">
+                      <span className="font-medium">{t.label || t.name}</span>
+                      <span className="block text-xs text-muted-foreground">{t.description}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        }}
+      </QueryGrid>
     </div>
   );
 }

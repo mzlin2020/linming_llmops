@@ -100,3 +100,10 @@ export interface StorePlugin {
 export type ToolRef =
   | { type: "builtin_tool"; provider: { name: string }; tool: { name: string; params: Record<string, unknown> } }
   | { type: "api_tool"; provider: { id: number; name: string }; tool: { id: number; name: string } };
+
+/** ToolRef 的稳定身份键：去重、选中判断、列表 key 共用。5e 编排页选择器同样按它比较。 */
+export function toolRefKey(ref: ToolRef): string {
+  return ref.type === "builtin_tool"
+    ? `builtin:${ref.provider.name}:${ref.tool.name}`
+    : `api:${ref.provider.id}:${ref.tool.name}`;
+}

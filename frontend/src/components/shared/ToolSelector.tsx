@@ -3,19 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 
 import { listApiTools, listBuiltinTools } from "@/api/plugins";
 import { cn } from "@/lib/utils";
-import type { ToolRef } from "@/types/plugins";
+import { toolRefKey, type ToolRef } from "@/types/plugins";
 
 const MAX_TOOLS = 10;
 
 interface Props {
   value: ToolRef[];
   onChange: (next: ToolRef[]) => void;
-}
-
-function refKey(ref: ToolRef): string {
-  return ref.type === "builtin_tool"
-    ? `builtin:${ref.provider.name}:${ref.tool.name}`
-    : `api:${ref.provider.id}:${ref.tool.name}`;
 }
 
 /**
@@ -30,13 +24,13 @@ export function ToolSelector({ value, onChange }: Props) {
     queryFn: () => listApiTools({ current_page: 1, page_size: 50 }),
   });
 
-  const selectedKeys = useMemo(() => new Set(value.map(refKey)), [value]);
+  const selectedKeys = useMemo(() => new Set(value.map(toolRefKey)), [value]);
   const atLimit = value.length >= MAX_TOOLS;
 
   const toggle = (ref: ToolRef) => {
-    const key = refKey(ref);
+    const key = toolRefKey(ref);
     if (selectedKeys.has(key)) {
-      onChange(value.filter((r) => refKey(r) !== key));
+      onChange(value.filter((r) => toolRefKey(r) !== key));
     } else if (!atLimit) {
       onChange([...value, ref]);
     }
@@ -56,10 +50,11 @@ export function ToolSelector({ value, onChange }: Props) {
               provider: { name: p.name },
               tool: { name: t.name, params: {} },
             };
-            const checked = selectedKeys.has(refKey(ref));
+            const key = toolRefKey(ref);
+            const checked = selectedKeys.has(key);
             return (
               <ToolRow
-                key={refKey(ref)}
+                key={key}
                 label={t.label || t.name}
                 sub={`${p.label || p.name} · ${t.description}`}
                 checked={checked}
@@ -79,10 +74,11 @@ export function ToolSelector({ value, onChange }: Props) {
               provider: { id: p.id, name: p.name },
               tool: { id: t.id, name: t.name },
             };
-            const checked = selectedKeys.has(refKey(ref));
+            const key = toolRefKey(ref);
+            const checked = selectedKeys.has(key);
             return (
               <ToolRow
-                key={refKey(ref)}
+                key={key}
                 label={t.name}
                 sub={`${p.name} · ${t.description}`}
                 checked={checked}
