@@ -1,4 +1,4 @@
-import { AiBadge } from "./AiBadge";
+import { AiBadge } from "@/features/chat/AiBadge";
 
 /** 空状态内置建议问题（去品牌的通用集；后续可由编排/配置覆盖）。 */
 const SUGGESTED = [
