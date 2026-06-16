@@ -20,6 +20,9 @@ import { CustomToolEditor } from "@/features/plugins/custom/CustomToolEditor";
 import { CustomToolsView } from "@/features/plugins/custom/CustomToolsView";
 import { PluginsLayout } from "@/features/plugins/PluginsLayout";
 import { PluginStoreView } from "@/features/plugins/store/PluginStoreView";
+import { AccountView } from "@/features/settings/account/AccountView";
+import { ApiKeysView } from "@/features/settings/api-keys/ApiKeysView";
+import { ModelsView } from "@/features/settings/models/ModelsView";
 import { SettingsLayout } from "@/features/settings/SettingsLayout";
 import { WorkflowPage } from "@/features/workflow/WorkflowPage";
 import { RequireAuth } from "./guards";
@@ -83,9 +86,9 @@ export const router = createBrowserRouter([
         element: <SettingsLayout />,
         children: [
           { index: true, element: <Navigate to="api-keys" replace /> },
-          { path: "api-keys", element: <Placeholder title="API 密钥" note="Phase 5f 实现" /> },
-          { path: "models", element: <Placeholder title="模型目录" note="Phase 5f 实现" /> },
-          { path: "account", element: <Placeholder title="账户" note="Phase 5f 实现" /> },
+          { path: "api-keys", element: <ApiKeysView /> },
+          { path: "models", element: <ModelsView /> },
+          { path: "account", element: <AccountView /> },
         ],
       },
       { path: "*", element: <Placeholder title="页面不存在" note="404" /> },
