@@ -12,4 +12,5 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/plugins", label: "插件" },
   { to: "/datasets", label: "知识库" },
   { to: "/workflow", label: "工作流" },
+  { to: "/images", label: "图像生成" },
 ];
