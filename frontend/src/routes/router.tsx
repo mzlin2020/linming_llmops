@@ -15,6 +15,7 @@ import { DocumentsView } from "@/features/datasets/detail/DocumentsView";
 import { HitTestingView } from "@/features/datasets/detail/HitTestingView";
 import { SegmentsView } from "@/features/datasets/segments/SegmentsView";
 import { HomePage } from "@/features/home/HomePage";
+import { ImageGenerationPage } from "@/features/images/ImageGenerationPage";
 import { BuiltinToolsView } from "@/features/plugins/builtin/BuiltinToolsView";
 import { CustomToolEditor } from "@/features/plugins/custom/CustomToolEditor";
 import { CustomToolsView } from "@/features/plugins/custom/CustomToolsView";
@@ -88,6 +89,7 @@ export const router = createBrowserRouter([
           { path: ":id", element: <WorkflowEditorPage /> },
         ],
       },
+      { path: "images", element: <ImageGenerationPage /> },
       {
         path: "settings",
         element: <SettingsLayout />,
