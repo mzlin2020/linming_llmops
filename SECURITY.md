@@ -35,6 +35,11 @@
 - 因本平台**无管理员概念**，代码节点对**所有登录用户**开放（工作流校验按 `is_admin=True` 放行）；同样地，工作流内可使用标记 `admin_only` 的内置工具。沙箱是**纵深防御而非绝对边界**。
 - 面向不可信用户开放注册的实例，建议据此评估风险：关闭自助注册（`ALLOW_REGISTRATION=false`）、做网络隔离，或在受信任的单运维部署下使用。
 
+## 图像生成
+
+- 图像生成按张计费、成本敏感。因本平台**无管理员概念**，该能力对**所有登录用户**开放（解除了原系统的管理员闸；内置生图工具 `admin_only=false`），成本由 `QUOTA_IMAGE_DAILY_LIMIT`（每日每账号上限，`<=0` 不限，redis fail-open）兜底；未配置生图模型（`DEFAULT_IMAGE_PROVIDER`/`DEFAULT_IMAGE_MODEL` 留空）时整能力关闭。
+- 生成图片经后端「能力 URL」对外：路径含不可猜的随机 uuid（`/api/images/file/<uuid>.<ext>`），无需登录即可加载（供 `<img>` / Agent markdown 渲染），等价于对象存储的预签名公网 URL —— 按 uuid 能力授权，并对文件名做严格白名单校验（拒路径穿越）。图生图的参考图 URL 须过域名白名单 + SSRF 守卫。
+
 ## 漏洞上报
 
 如发现安全问题，请**不要**直接开公开 issue。优先通过 GitHub 的 **Private Vulnerability Reporting**（仓库 Security 标签页）私下上报；或以最小可复现信息私下联系维护者。我们会尽快响应并在修复后致谢。

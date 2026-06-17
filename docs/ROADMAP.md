@@ -29,7 +29,7 @@
 | Phase 5 | 前端（Vite React SPA） | 核心 AI 界面 + 框架无关 POST-SSE | ✅ |
 | Phase 6 | Docker 一键部署 + 集成硬化 | 全栈 compose；启动即迁移；端到端冒烟 | ✅ |
 | Phase 7 | 开源打磨（v1 发布） | README/LICENSE/CONTRIBUTING/SECURITY/供应商指南；定稿 `.env.example` | ✅ |
-| Phase 8 | v1.1：工作流 / 图像 / TTS | 工作流引擎 + 可视化编辑器（✅ 已交付）；图像/TTS 供应商可插拔（⏳） | 🚧 进行中 |
+| Phase 8 | v1.1：工作流 / 图像 / TTS | 工作流 + 可视化编辑器（✅）；图像生成 文生图/图生图（✅）；TTS 供应商可插拔（⏳） | 🚧 进行中 |
 
 ## v1 功能清单
 
@@ -38,7 +38,7 @@
 ## v1.1 计划（Phase 8）
 
 - **工作流可视化编辑器（✅ 已交付）**：`core/workflow` 引擎已接出服务/处理器/`/workflows` 路由（CRUD + 草稿/发布双轨 + 调试 SSE）+ 前端 `@xyflow/react` 图编辑器（建图 → 逐节点流式调试 → 发布 → 作为工具被应用调用）。代码节点对所有登录用户开放（见 [`../SECURITY.md`](../SECURITY.md)）。
-- **图像生成（⏳ 进行中）**：供应商可插拔实现，默认关闭，未配置时优雅降级。
+- **图像生成（✅ 已交付）**：文生图 / 图生图（OpenAI 兼容 `/images/generations`）+ 独立生图页与历史画廊 + 内置生图工具（Agent 对话出图）。对所有登录用户开放、`QUOTA_IMAGE_DAILY_LIMIT` 成本兜底；图片走不可猜的能力 URL（`/api/images/file/<uuid>.<ext>`）。供应商可插拔，默认关闭、未配置优雅降级（见 [`../SECURITY.md`](../SECURITY.md)）。
 - **TTS（文本转语音）（⏳ 进行中）**：供应商可插拔实现，默认关闭。
 
 ## 验证方式（v1 出口）

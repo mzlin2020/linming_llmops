@@ -100,24 +100,23 @@ EMBEDDING_VECTOR_SIZE=768
 
 ## 3. 图像生成 / TTS（可选，v1.1）
 
-图像生成与 TTS 属 v1.1 能力，**默认关闭**，未配置时优雅降级。供应商可插拔——填入对应供应商即启用。仓库内置火山引擎为可选实现示例（需中国账号）：
+**图像生成（v1.1，已交付）**：文生图 / 图生图，走 OpenAI 兼容的 `/images/generations`。供应商可插拔——`provider` 须先在「模型目录」里登记（含 `base_url` / `api_key` 凭证，与对话供应商同一套登记方式），再用下面两项指定默认生图 provider/model。**默认关闭**（留空即关），未配置时优雅降级；按张计费，成本由 `QUOTA_IMAGE_DAILY_LIMIT` 兜底。
 
 ```ini
-# 图像（示例：火山引擎）
-DEFAULT_IMAGE_PROVIDER=volcengine_seedream
-DEFAULT_IMAGE_MODEL=doubao-seedream-5-0-260128
-VOLCENGINE_ARK_IMAGE_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-
-# TTS（示例：火山引擎）
-DEFAULT_TTS_PROVIDER=volcengine_tts
-DEFAULT_TTS_MODEL=doubao-tts-2-0
-DEFAULT_TTS_VOICE=zh_female_vv_uranus_bigtts
-VOLCENGINE_TTS_API_KEY=...
-VOLCENGINE_TTS_APP_ID=...
-VOLCENGINE_TTS_ACCESS_TOKEN=...
+# 图像（示例：OpenAI 兼容文生图）
+DEFAULT_IMAGE_PROVIDER=openai
+DEFAULT_IMAGE_MODEL=dall-e-3
 ```
 
-> 这两项的前端界面与服务端处理器在 v1.1（见 [`ROADMAP.md`](ROADMAP.md)）补齐；v1 留作配置占位。
+生成的图片落本地存储，经不可猜的「能力 URL」`/api/images/file/<uuid>.<ext>` 对外（无需登录即可由 `<img>` 加载）。已发布的生图能力同时作为内置工具 `image_generation`，可被带工具的应用 Agent 在对话里调用。
+
+**TTS（v1.1，进行中）**：供应商可插拔，**默认关闭**，前端界面与服务端处理器后续补齐（见 [`ROADMAP.md`](ROADMAP.md)）。
+
+```ini
+DEFAULT_TTS_PROVIDER=
+DEFAULT_TTS_MODEL=
+DEFAULT_TTS_VOICE=
+```
 
 ---
 
