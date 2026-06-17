@@ -15,6 +15,8 @@ export interface ChatMessage {
   role: MessageRole;
   content: string;
   status: MessageStatus;
+  /** 后端消息（轮）id：助手气泡完成后回填，供「建议追问」按 message_id 拉 follow-up。 */
+  id?: number;
 }
 
 /** 消息分页出参的一轮（对齐后端 MessageItem，仅取本期所需字段）。 */
@@ -61,7 +63,7 @@ export type Action =
   | { type: "INIT"; messages: ChatMessage[] }
   | { type: "PUSH_PAIR"; user: ChatMessage; assistant: ChatMessage }
   | { type: "APPEND_DELTA"; delta: string }
-  | { type: "FINISH_ASSISTANT"; status?: ChatMessage["status"] }
+  | { type: "FINISH_ASSISTANT"; status?: ChatMessage["status"]; messageId?: number }
   | { type: "ERROR_ASSISTANT"; message: string }
   | { type: "STOP_ASSISTANT" }
   | { type: "CLEAR" };
@@ -119,6 +121,7 @@ export function reducer(state: ChatState, action: Action): ChatState {
       return patchStreamingAssistant(state, (last) => ({
         ...last,
         status: action.status ?? "done",
+        id: action.messageId ?? last.id,
       }));
     case "ERROR_ASSISTANT":
       return patchStreamingAssistant(state, (last) => ({
@@ -160,6 +163,7 @@ export function historyToMessages(rounds: HistoryRound[]): ChatMessage[] {
       role: "assistant",
       content: r.answer || (status === "error" ? r.error : ""),
       status,
+      id: r.id,
     });
   }
   return out;

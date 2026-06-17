@@ -218,6 +218,7 @@ export function OrchestrationPage() {
             openingStatement={config.opening_statement}
             openingQuestions={config.opening_questions}
             longTermMemoryEnabled={config.long_term_memory.enable}
+            suggestAfterAnswer={config.suggested_after_answer.enable}
           />
         </div>
       </div>

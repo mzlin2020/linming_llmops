@@ -8,6 +8,7 @@ import { ChatEmptyState } from "@/features/chat/ChatEmptyState";
 import { ChatPanel } from "@/features/chat/ChatPanel";
 import { historyToMessages, type HistoryRound } from "@/features/chat/chat-core";
 import { useChatStream } from "@/features/chat/use-chat-stream";
+import { useFollowups } from "@/features/chat/use-followups";
 import { Button } from "@/components/ui/button";
 import { get, post } from "@/lib/http/client";
 import { getErrorMessage } from "@/lib/http/errors";
@@ -87,6 +88,12 @@ function PublishedChat({ appId, name, config }: { appId: number; name: string; c
     clearConversation: () => post(`/apps/${appId}/published-conversations/clear`),
   });
 
+  const followups = useFollowups({
+    messages,
+    streaming,
+    enabled: !!config.suggested_after_answer?.enable,
+  });
+
   const header = (
     <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
       <Button asChild variant="ghost" size="icon" aria-label="返回应用列表">
@@ -116,6 +123,8 @@ function PublishedChat({ appId, name, config }: { appId: number; name: string; c
       streaming={streaming}
       onSend={sendMessage}
       onStop={stopGenerating}
+      followups={followups}
+      onPickFollowup={(q) => void sendMessage(q)}
       header={header}
       emptyState={
         <ChatEmptyState

@@ -55,6 +55,7 @@
       ④useChatStream 传附件。受 `CHAT_ATTACHMENT_URL_PREFIXES` 域名白名单门控（默认空=拒绝）。
 - [ ] 应用编排（orchestrate）：模型参数面板、工具/知识库/工作流选择器的交互与校验、调试面板、
       发布流程提示、开场白/开场问题编辑体验。
+      （✓ 已对齐：**回答后建议追问 chips**（debug+published），见已完成记录 2026-06-18。）
 - [ ] 内置插件 / 自定义插件（API 工具）：插件列表、配置表单、参数校验与错误提示交互。
 - [ ] 知识库：上传、分段预览、检索测试 UI 的交互。
 - [ ] 设置 / 模型目录管理：表单与列表交互。
@@ -70,3 +71,9 @@
   `stores/ai-model-store.ts` + `home/assistant/ModelPicker.tsx`（原生 select+optgroup，过滤非 chat/弃用，
   «默认模型»选项），`use-assistant-chat` 的 buildBody 读 store 在成对时附带 provider/model，AssistantChat 头部
   渲染选择器。后端未改。 | 113 passed（+2）、typecheck+build 绿 | 见本次提交（feat: assistant model picker）
+- 2026-06-18 01:30 | **回答后建议追问（follow-up chips）** | 参考站 `debug-preview` 回答结束后据末条消息 id 拉
+  follow-up 并在输入框上方渲染可点 chips；我们后端 `/ai/suggested-questions` + 前端 `api/ai.suggestQuestions`
+  都已存在但聊天 UI 从未用。改：`ChatMessage` 加 `id`、`FINISH_ASSISTANT` 存 `agent_end` 的 message_id、
+  history 回填 id；新增 `use-followups.ts`（仅对本轮实时回答 key=`a-` 取、流式/未开启隐藏、同条只取一次）；
+  `ChatPanel` 加 followups/onPickFollowup（输入框上方 chips）；接入 DebugChatPanel（草稿 suggested_after_answer）
+  与 PublishedChat（已发布配置）。后端未改。 | 117 passed（+4）、typecheck+build 绿 | 见本次提交（feat: follow-up chips）

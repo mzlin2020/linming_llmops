@@ -97,6 +97,7 @@ export function useChatStream(options: ChatStreamOptions) {
               dispatch({
                 type: "FINISH_ASSISTANT",
                 status: (frame.data as AgentEndData).status === "stop" ? "stopped" : "done",
+                messageId: (frame.data as AgentEndData).message_id,
               });
               break;
             case "error":

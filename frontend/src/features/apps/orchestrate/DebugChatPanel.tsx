@@ -5,6 +5,7 @@ import { ChatEmptyState } from "@/features/chat/ChatEmptyState";
 import { ChatPanel } from "@/features/chat/ChatPanel";
 import { historyToMessages, type HistoryRound } from "@/features/chat/chat-core";
 import { useChatStream } from "@/features/chat/use-chat-stream";
+import { useFollowups } from "@/features/chat/use-followups";
 import { get, post } from "@/lib/http/client";
 import type { PageResult } from "@/types/api";
 
@@ -17,6 +18,8 @@ interface Props {
   openingQuestions?: string[];
   /** 是否开启长期记忆：开启时头部「长期记忆」按钮可点（查看/编辑滚动摘要）。 */
   longTermMemoryEnabled?: boolean;
+  /** 是否在回答后生成建议追问（草稿配置的 suggested_after_answer）。 */
+  suggestAfterAnswer?: boolean;
 }
 
 /** 编排页右栏：对当前草稿配置的调试预览（SSE 流式）。复用通用聊天内核，仅端点带 app_id。 */
@@ -25,6 +28,7 @@ export function DebugChatPanel({
   openingStatement,
   openingQuestions,
   longTermMemoryEnabled,
+  suggestAfterAnswer,
 }: Props) {
   const [memoryOpen, setMemoryOpen] = useState(false);
   const { messages, streaming, sendMessage, stopGenerating, clearConversation } = useChatStream({
@@ -40,6 +44,8 @@ export function DebugChatPanel({
       post(`/apps/${appId}/conversations/tasks/${encodeURIComponent(taskId)}/stop`),
     clearConversation: () => post(`/apps/${appId}/conversations/delete-debug-conversation`),
   });
+
+  const followups = useFollowups({ messages, streaming, enabled: !!suggestAfterAnswer });
 
   const header = (
     <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
@@ -77,6 +83,8 @@ export function DebugChatPanel({
         streaming={streaming}
         onSend={sendMessage}
         onStop={stopGenerating}
+        followups={followups}
+        onPickFollowup={(q) => void sendMessage(q)}
         header={header}
         emptyState={
           <ChatEmptyState

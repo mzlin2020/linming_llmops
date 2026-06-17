@@ -18,6 +18,10 @@ interface Props {
   emptyState: ReactNode;
   /** 输入框下方脚注（免责声明等）。 */
   footerNote?: ReactNode;
+  /** 回答后的建议追问；非空且非流式时在输入框上方渲染为可点 chips。 */
+  followups?: string[];
+  /** 点击某条建议追问（通常即以该文本发送）。 */
+  onPickFollowup?: (q: string) => void;
   className?: string;
 }
 
@@ -33,6 +37,8 @@ export function ChatPanel({
   header,
   emptyState,
   footerNote,
+  followups,
+  onPickFollowup,
   className,
 }: Props) {
   const { ref: listRef } = useAutoScroll<HTMLDivElement>([messages]);
@@ -52,6 +58,20 @@ export function ChatPanel({
         )}
       </div>
       <div className="border-t px-3 pb-[max(env(safe-area-inset-bottom),12px)] pt-3 sm:px-4">
+        {followups && followups.length > 0 && !streaming ? (
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {followups.map((q, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onPickFollowup?.(q)}
+                className="rounded-full border border-border/70 bg-muted/30 px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 hover:text-foreground"
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <Composer streaming={streaming} onSend={onSend} onStop={onStop} />
         {footerNote}
       </div>
