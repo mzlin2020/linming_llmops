@@ -45,12 +45,18 @@ export function ConfigEditor({ value, onChange }: Props) {
             value={value.model_config}
             onChange={(model_config) => set({ model_config })}
           />
-          <label className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-muted-foreground">携带历史对话轮数</span>
-            <Input
-              type="number"
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-muted-foreground">携带上下文轮数</span>
+              <span className="w-10 text-right tabular-nums text-muted-foreground">
+                {value.dialog_round}
+              </span>
+            </div>
+            <input
+              type="range"
               min={DIALOG_ROUND_MIN}
               max={DIALOG_ROUND_MAX}
+              step={1}
               value={value.dialog_round}
               onChange={(e) =>
                 set({
@@ -61,9 +67,12 @@ export function ConfigEditor({ value, onChange }: Props) {
                 })
               }
               aria-label="对话轮数"
-              className="w-24"
+              className="w-full cursor-pointer accent-[hsl(var(--primary))]"
             />
-          </label>
+            <p className="text-xs text-muted-foreground">
+              对话时携带最近 {value.dialog_round} 轮历史。
+            </p>
+          </div>
         </Section>
       </Group>
 

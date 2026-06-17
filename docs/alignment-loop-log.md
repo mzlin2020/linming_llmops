@@ -55,8 +55,10 @@
       ④useChatStream 传附件。受 `CHAT_ATTACHMENT_URL_PREFIXES` 域名白名单门控（默认空=拒绝）。
 - [ ] 应用编排（orchestrate）：模型参数面板、工具/知识库/工作流选择器的交互与校验、调试面板、
       发布流程提示、开场白/开场问题编辑体验。
-      （✓ 已对齐：**回答后建议追问 chips**（debug+published），见已完成记录 2026-06-18。）
-- [ ] 内置插件 / 自定义插件（API 工具）：插件列表、配置表单、参数校验与错误提示交互。
+      （✓ 已对齐：**回答后建议追问 chips**（debug+published）、**携带上下文轮数改 Slider**，见已完成记录 2026-06-18。
+      已核：模型参数面板参考站也无（不做）；config-editor 开关仅差「语音播报」(TTS, v1.1 暂缓)。）
+- [x] 内置插件 / 自定义插件（API 工具）：已核为**已对齐**——自定义插件编辑器已有请求头 + OpenAPI 校验，
+      且多了「校验后本地解析工具预览」（比参考更全）；内置工具分类 chips + 卡片展开同构。无缺口。
 - [ ] 知识库：上传、分段预览、检索测试 UI 的交互。
       （✓ 已对齐：**查询历史独立视图/tab**，见已完成记录 2026-06-18；命中测试视图本就有「最近查询」侧栏。）
 - [ ] 设置 / 模型目录管理：表单与列表交互。
@@ -83,3 +85,7 @@
   全已就绪，仅被命中测试侧栏简单用了（只显示文本），无独立视图。新增 `datasets/detail/QueriesView.tsx`（列表：
   query+来源徽标+MM-DD HH:mm 时间、空态引导去命中测试），DatasetDetailLayout 加「查询历史」nav，router 加
   `:id/queries` 路由。后端未改。 | 119 passed（+2）、typecheck+build 绿 | 见本次提交（feat: dataset queries view）
+- 2026-06-18 03:27 | **编排页「携带上下文轮数」改 Slider** | 参考 config-editor 用 Slider(0–20，带实时数值)
+  控制 dialog_round，我们用数字 Input。改为原生 range 滑块(accent-primary 主题色)+实时数值+「携带最近 N 轮历史」
+  提示(范围用我们后端常量 0–100)。先排除了模型参数面板(参考站也无)、插件领域(已对齐)等。后端未改。
+  | 120 passed（+1）、typecheck+build 绿 | 见本次提交（feat: dialog-round slider）

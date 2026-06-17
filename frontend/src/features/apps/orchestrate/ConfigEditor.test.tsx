@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/api/apps", () => ({ listLanguageModels: vi.fn() }));
@@ -85,5 +85,15 @@ describe("ConfigEditor 模型下拉只显示对话模型", () => {
     expect(await screen.findByText("DeepSeek Chat")).toBeInTheDocument();
     // 图像模型（火山生图 / text2img）不应出现在对话模型下拉
     expect(screen.queryByText("火山生图")).toBeNull();
+  });
+});
+
+describe("ConfigEditor 携带上下文轮数滑块", () => {
+  it("拖动滑块以新轮数回调 onChange", () => {
+    const onChange = vi.fn();
+    renderWithProviders(<ConfigEditor value={config()} onChange={onChange} />);
+    const slider = screen.getByRole("slider", { name: "对话轮数" });
+    fireEvent.change(slider, { target: { value: "8" } });
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ dialog_round: 8 }));
   });
 });
