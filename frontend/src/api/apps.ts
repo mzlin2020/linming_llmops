@@ -46,12 +46,30 @@ export function updateDraftConfig(appId: number, config: Partial<AppConfig>): Pr
 
 // ---------- 发布 / 历史 ----------
 
-export function publishApp(appId: number): Promise<AppDetail> {
-  return post<AppDetail>(`/apps/${appId}/publish`);
+// 注意：/publish 与 /cancel-publish 返回的是「应用基础项」（后端 _app_item，不含
+// app_config / is_public），形状等同 AppListItem —— 故发布后页面状态须靠重拉 getApp 刷新，
+// 不能拿返回值里的 app_config 去同步本地配置（历史 bug：会把 config 置空卡在加载态）。
+export function publishApp(appId: number): Promise<AppListItem> {
+  return post<AppListItem>(`/apps/${appId}/publish`);
 }
 
-export function cancelPublishApp(appId: number): Promise<AppDetail> {
-  return post<AppDetail>(`/apps/${appId}/cancel-publish`);
+export function cancelPublishApp(appId: number): Promise<AppListItem> {
+  return post<AppListItem>(`/apps/${appId}/cancel-publish`);
+}
+
+/** 取已发布配置（未发布返回 null）。已发布对话页据此渲染开场白 / 开场问题。 */
+export function getPublishedConfig(appId: number): Promise<AppConfig | null> {
+  return get<AppConfig | null>(`/apps/${appId}/published-config`);
+}
+
+// ---------- 长期记忆（编排页调试区查看 / 编辑滚动摘要）----------
+
+export function getSummary(appId: number): Promise<{ summary: string }> {
+  return get<{ summary: string }>(`/apps/${appId}/summary`);
+}
+
+export function updateSummary(appId: number, summary: string): Promise<unknown> {
+  return post(`/apps/${appId}/summary`, { summary });
 }
 
 export function listPublishHistories(

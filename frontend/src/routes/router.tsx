@@ -5,6 +5,7 @@ import { Placeholder } from "@/components/shared/Placeholder";
 import { AppsLayout } from "@/features/apps/AppsLayout";
 import { AppsListView } from "@/features/apps/AppsListView";
 import { OrchestrationPage } from "@/features/apps/orchestrate/OrchestrationPage";
+import { PublishedChatPage } from "@/features/apps/published/PublishedChatPage";
 import { AppStoreView } from "@/features/apps/store/AppStoreView";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { RegisterPage } from "@/features/auth/RegisterPage";
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
             ],
           },
           { path: ":id", element: <OrchestrationPage /> },
+          { path: ":id/chat", element: <PublishedChatPage /> },
         ],
       },
       {

@@ -86,6 +86,8 @@ export interface LlmModel {
   features: string[];
   context_window: number;
   deprecated: boolean;
+  /** chat / text2img / tts / embedding（对齐后端 ModelType）；编排页对话模型仅取 chat。 */
+  model_type: string;
 }
 
 /** 模型提供商（GET /language-models 单项）。 */
@@ -111,5 +113,6 @@ export const DIALOG_ROUND_MIN = 0;
 export const DIALOG_ROUND_MAX = 100;
 export const PRESET_PROMPT_MAX = 8000;
 export const OPENING_STATEMENT_MAX = 2000;
+export const LONG_TERM_MEMORY_MAX = 2000;
 export const APP_NAME_MAX = 64;
 export const APP_DESCRIPTION_MAX = 512;

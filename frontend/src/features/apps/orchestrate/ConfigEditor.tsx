@@ -31,43 +31,44 @@ export function ConfigEditor({ value, onChange }: Props) {
   const set = (patch: Partial<AppConfig>) => onChange({ ...value, ...patch });
 
   return (
-    <div className="space-y-6">
-      <Section title="模型">
-        <ModelSelect
-          value={value.model_config}
-          onChange={(model_config) => set({ model_config })}
-        />
-        <label className="flex items-center justify-between gap-3 text-sm">
-          <span className="text-muted-foreground">携带历史对话轮数</span>
-          <Input
-            type="number"
-            min={DIALOG_ROUND_MIN}
-            max={DIALOG_ROUND_MAX}
-            value={value.dialog_round}
-            onChange={(e) =>
-              set({
-                dialog_round: Math.max(
-                  DIALOG_ROUND_MIN,
-                  Math.min(DIALOG_ROUND_MAX, Number(e.target.value) || 0),
-                ),
-              })
-            }
-            aria-label="对话轮数"
-            className="w-24"
+    <div className="space-y-8">
+      <Group title="核心配置">
+        <Section title="人设与回复逻辑">
+          <PresetPromptField
+            value={value.preset_prompt}
+            onChange={(preset_prompt) => set({ preset_prompt })}
           />
-        </label>
-      </Section>
+        </Section>
 
-      <Section title="人设与回复逻辑">
-        <PresetPromptField
-          value={value.preset_prompt}
-          onChange={(preset_prompt) => set({ preset_prompt })}
-        />
-      </Section>
+        <Section title="模型">
+          <ModelSelect
+            value={value.model_config}
+            onChange={(model_config) => set({ model_config })}
+          />
+          <label className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-muted-foreground">携带历史对话轮数</span>
+            <Input
+              type="number"
+              min={DIALOG_ROUND_MIN}
+              max={DIALOG_ROUND_MAX}
+              value={value.dialog_round}
+              onChange={(e) =>
+                set({
+                  dialog_round: Math.max(
+                    DIALOG_ROUND_MIN,
+                    Math.min(DIALOG_ROUND_MAX, Number(e.target.value) || 0),
+                  ),
+                })
+              }
+              aria-label="对话轮数"
+              className="w-24"
+            />
+          </label>
+        </Section>
+      </Group>
 
-      <Section title="对话开场">
-        <div className="space-y-1.5">
-          <span className="text-sm text-muted-foreground">开场白</span>
+      <Group title="对话初始化">
+        <Section title="开场白">
           <Textarea
             rows={2}
             maxLength={OPENING_STATEMENT_MAX}
@@ -76,51 +77,47 @@ export function ConfigEditor({ value, onChange }: Props) {
             aria-label="开场白"
             placeholder="用户进入对话时看到的第一句话…"
           />
-        </div>
-        <OpeningQuestionsField
-          preset={value.preset_prompt}
-          value={value.opening_questions}
-          onChange={(opening_questions) => set({ opening_questions })}
-        />
-      </Section>
+          <OpeningQuestionsField
+            preset={value.preset_prompt}
+            value={value.opening_questions}
+            onChange={(opening_questions) => set({ opening_questions })}
+          />
+        </Section>
 
-      <Section title="工具">
-        <ToolSelector value={value.tools} onChange={(tools) => set({ tools })} />
-      </Section>
+        <Section title="长期记忆">
+          <ToggleRow
+            label="启用长期记忆"
+            hint="跨轮滚动摘要并注入系统提示"
+            checked={value.long_term_memory.enable}
+            onChange={(enable) => set({ long_term_memory: { enable } })}
+          />
+        </Section>
+      </Group>
 
-      <Section title="知识库">
-        <DatasetSelector value={value.datasets} onChange={(datasets) => set({ datasets })} />
-      </Section>
+      <Group title="应用能力">
+        <Section title="工具 / 插件">
+          <ToolSelector value={value.tools} onChange={(tools) => set({ tools })} />
+        </Section>
 
-      <Section title="工作流">
-        <WorkflowSelector value={value.workflows} onChange={(workflows) => set({ workflows })} />
-      </Section>
+        <Section title="知识库">
+          <DatasetSelector value={value.datasets} onChange={(datasets) => set({ datasets })} />
+        </Section>
 
-      <Section title="能力开关">
-        <ToggleRow
-          label="长期记忆"
-          hint="跨轮滚动摘要并注入系统提示"
-          checked={value.long_term_memory.enable}
-          onChange={(enable) => set({ long_term_memory: { enable } })}
-        />
-        <ToggleRow
-          label="回答后推荐问题"
-          checked={value.suggested_after_answer.enable}
-          onChange={(enable) => set({ suggested_after_answer: { enable } })}
-        />
-        <ToggleRow
-          label="语音输入"
-          hint="v1.1 提供"
-          checked={value.speech_to_text.enable}
-          onChange={(enable) => set({ speech_to_text: { enable } })}
-        />
-        <ToggleRow
-          label="语音输出"
-          hint="v1.1 提供"
-          checked={value.text_to_speech.enable}
-          onChange={(enable) => set({ text_to_speech: { enable } })}
-        />
-      </Section>
+        <Section title="工作流">
+          <WorkflowSelector value={value.workflows} onChange={(workflows) => set({ workflows })} />
+        </Section>
+      </Group>
+    </div>
+  );
+}
+
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="space-y-5">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </h2>
+      <div className="space-y-6">{children}</div>
     </div>
   );
 }
@@ -164,7 +161,11 @@ function ModelSelect({
   onChange: (next: AppConfig["model_config"]) => void;
 }) {
   const query = useQuery({ queryKey: ["language-models"], queryFn: listLanguageModels });
-  const providers = query.data ?? [];
+  // 仅保留对话模型：剔除 text2img/tts/embedding 与已弃用项，避免「火山生图」之类图像模型混进对话下拉
+  // （选了对话会 400）。图像生成走独立 /images/* 端点，不复用此列表。
+  const providers = (query.data ?? [])
+    .map((p) => ({ ...p, models: p.models.filter((m) => m.model_type === "chat" && !m.deprecated) }))
+    .filter((p) => p.models.length > 0);
   const current = providers.find((p) => p.name === value.provider);
   const knownModel = !!current?.models.some((m) => m.model_name === value.model);
 

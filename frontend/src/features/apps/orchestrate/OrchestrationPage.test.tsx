@@ -96,26 +96,31 @@ describe("OrchestrationPage", () => {
     expect(await screen.findByText("客服助手")).toBeInTheDocument();
   });
 
-  it("改配置后保存 → 调 updateDraftConfig", async () => {
+  it("改配置后自动保存（防抖）→ 调 updateDraftConfig", async () => {
     renderPage();
     await screen.findByText("客服助手");
     fireEvent.click(screen.getByRole("button", { name: "改一处配置" }));
-    const save = screen.getByRole("button", { name: "保存草稿" });
-    expect(save).toBeEnabled();
-    fireEvent.click(save);
-    await waitFor(() =>
-      expect(mockUpdate).toHaveBeenCalledWith(7, expect.objectContaining({ dialog_round: 4 })),
+    // 无手动「保存草稿」按钮：改动 600ms 后自动落库。
+    await waitFor(
+      () =>
+        expect(mockUpdate).toHaveBeenCalledWith(7, expect.objectContaining({ dialog_round: 4 })),
+      { timeout: 2000 },
     );
   });
 
-  it("有未保存修改时发布按钮禁用", async () => {
+  it("发布前先冲刷未落库改动，再调 publishApp", async () => {
     renderPage();
     await screen.findByText("客服助手");
     fireEvent.click(screen.getByRole("button", { name: "改一处配置" }));
-    expect(screen.getByRole("button", { name: "发布" })).toBeDisabled();
+    // 防抖还没触发就点发布：应先 flush 保存最新草稿，再发布。
+    fireEvent.click(screen.getByRole("button", { name: "发布" }));
+    await waitFor(() =>
+      expect(mockUpdate).toHaveBeenCalledWith(7, expect.objectContaining({ dialog_round: 4 })),
+    );
+    await waitFor(() => expect(mockPublish).toHaveBeenCalled());
   });
 
-  it("无修改时点发布 → 调 publishApp", async () => {
+  it("点发布 → 调 publishApp", async () => {
     renderPage();
     await screen.findByText("客服助手");
     fireEvent.click(screen.getByRole("button", { name: "发布" }));

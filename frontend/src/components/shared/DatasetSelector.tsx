@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 import { listDatasets } from "@/api/datasets";
 import { cn } from "@/lib/utils";
@@ -42,7 +44,15 @@ export function DatasetSelector({ value, onChange }: Props) {
       {query.isLoading ? (
         <p className="text-sm text-muted-foreground">加载中…</p>
       ) : list.length === 0 ? (
-        <p className="text-sm text-muted-foreground">还没有知识库。</p>
+        <div className="rounded-md border border-dashed px-3 py-4 text-sm text-muted-foreground">
+          <p>还没有知识库。</p>
+          <Link
+            to="/datasets"
+            className="mt-1.5 inline-flex items-center gap-1 font-medium text-primary hover:underline"
+          >
+            去创建知识库 <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       ) : (
         <div className="space-y-1">
           {list.map((ds) => {

@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { AiBadge } from "./AiBadge";
 import type { ChatMessage } from "./chat-core";
+import { ThinkingIndicator } from "./ThinkingIndicator";
 
 // 模块级常量：避免每次渲染新建数组（MessageItem 已 memo，新数组会削弱其稳定性）。
 const REMARK_PLUGINS = [remarkGfm];
@@ -24,16 +25,6 @@ const MARKDOWN_PROSE = cn(
   "[&_h3]:mb-1 [&_h3]:mt-2 [&_h3]:font-semibold",
   "[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground",
 );
-
-/** 流式光标：去品牌的等宽闪烁竖条（用 Tailwind animate-pulse，无需额外 CSS）。 */
-function Caret() {
-  return (
-    <span
-      aria-hidden
-      className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[2px] animate-pulse bg-primary align-text-bottom"
-    />
-  );
-}
 
 // memo：流式期间只有末条消息引用在变，历史消息不必随每个 delta 重渲（Markdown 解析不便宜）。
 export const MessageItem = memo(function MessageItem({ message }: { message: ChatMessage }) {
@@ -55,14 +46,10 @@ export const MessageItem = memo(function MessageItem({ message }: { message: Cha
       <AiBadge className="hidden size-8 shrink-0 rounded-lg text-xs sm:flex" />
       <div className="min-w-0 flex-1 pt-0.5">
         {thinking ? (
-          <p className="font-mono text-sm text-muted-foreground">
-            正在思考
-            <Caret />
-          </p>
+          <ThinkingIndicator />
         ) : (
           <div className={cn(MARKDOWN_PROSE, message.status === "error" && "text-destructive/90")}>
             <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{message.content}</ReactMarkdown>
-            {streaming && <Caret />}
           </div>
         )}
       </div>

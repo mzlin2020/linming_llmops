@@ -1,13 +1,32 @@
-import { RotateCcw } from "lucide-react";
+import { useState } from "react";
+import { Brain, RotateCcw } from "lucide-react";
 
+import { ChatEmptyState } from "@/features/chat/ChatEmptyState";
 import { ChatPanel } from "@/features/chat/ChatPanel";
 import { historyToMessages, type HistoryRound } from "@/features/chat/chat-core";
 import { useChatStream } from "@/features/chat/use-chat-stream";
 import { get, post } from "@/lib/http/client";
 import type { PageResult } from "@/types/api";
 
+import { LongTermMemoryModal } from "./LongTermMemoryModal";
+
+interface Props {
+  appId: number;
+  /** 当前草稿配置的开场白 / 开场问题：空会话态在聊天框里展示（可点击发送）。 */
+  openingStatement?: string;
+  openingQuestions?: string[];
+  /** 是否开启长期记忆：开启时头部「长期记忆」按钮可点（查看/编辑滚动摘要）。 */
+  longTermMemoryEnabled?: boolean;
+}
+
 /** 编排页右栏：对当前草稿配置的调试预览（SSE 流式）。复用通用聊天内核，仅端点带 app_id。 */
-export function DebugChatPanel({ appId }: { appId: number }) {
+export function DebugChatPanel({
+  appId,
+  openingStatement,
+  openingQuestions,
+  longTermMemoryEnabled,
+}: Props) {
+  const [memoryOpen, setMemoryOpen] = useState(false);
   const { messages, streaming, sendMessage, stopGenerating, clearConversation } = useChatStream({
     chatUrl: `/apps/${appId}/conversations`,
     buildBody: (query) => ({ query }),
@@ -25,38 +44,60 @@ export function DebugChatPanel({ appId }: { appId: number }) {
   const header = (
     <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
       <p className="text-sm font-medium">调试预览</p>
-      {messages.length > 0 && (
+      <div className="flex items-center gap-1">
         <button
           type="button"
-          onClick={() => void clearConversation()}
-          aria-label="清空调试对话"
-          title="清空调试对话"
-          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          disabled={!longTermMemoryEnabled}
+          onClick={() => setMemoryOpen(true)}
+          aria-label="查看长期记忆"
+          title={longTermMemoryEnabled ? "查看 / 编辑长期记忆" : "开启长期记忆后可查看"}
+          className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
         >
-          <RotateCcw className="h-4 w-4" />
+          <Brain className="h-4 w-4" />
         </button>
-      )}
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={() => void clearConversation()}
+            aria-label="清空调试对话"
+            title="清空调试对话"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
+        )}
+      </div>
     </header>
   );
 
   return (
-    <ChatPanel
-      messages={messages}
-      streaming={streaming}
-      onSend={sendMessage}
-      onStop={stopGenerating}
-      header={header}
-      emptyState={
-        <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-sm text-muted-foreground">
-          <p>在此预览当前草稿配置的对话效果。</p>
-          <p className="text-xs">改完配置记得先「保存草稿」，调试读取的是已保存的草稿。</p>
-        </div>
-      }
-      footerNote={
-        <p className="pt-2 text-center text-[10px] tracking-wider text-muted-foreground/70">
-          调试对话读取草稿配置 · 回答由 AI 生成
-        </p>
-      }
-    />
+    <>
+      <ChatPanel
+        messages={messages}
+        streaming={streaming}
+        onSend={sendMessage}
+        onStop={stopGenerating}
+        header={header}
+        emptyState={
+          <ChatEmptyState
+            openingStatement={openingStatement}
+            openingQuestions={openingQuestions}
+            onPick={(q) => void sendMessage(q)}
+            fallback={
+              <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-sm text-muted-foreground">
+                <p>在此预览当前草稿配置的对话效果。</p>
+                <p className="text-xs">配置改动会自动保存，调试读取的是最新草稿。</p>
+              </div>
+            }
+          />
+        }
+        footerNote={
+          <p className="pt-2 text-center text-[10px] tracking-wider text-muted-foreground/70">
+            调试对话读取草稿配置 · 回答由 AI 生成
+          </p>
+        }
+      />
+      <LongTermMemoryModal appId={appId} open={memoryOpen} onClose={() => setMemoryOpen(false)} />
+    </>
   );
 }

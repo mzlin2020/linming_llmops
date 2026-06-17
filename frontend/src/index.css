@@ -57,3 +57,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 流式「思考中…」渐变扫光（ThinkingIndicator 内联样式引用）。 */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

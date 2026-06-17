@@ -22,6 +22,7 @@ const provider: LlmProvider = {
       features: ["tool_call", "vision"],
       context_window: 128000,
       deprecated: false,
+      model_type: "chat",
     },
   ],
 };

@@ -9,7 +9,7 @@ interface Props {
   onStop: () => void;
 }
 
-/** 输入区：自适应高度 textarea + 发送/停止切换，中文 IME 安全，终端提示符风格（去品牌）。 */
+/** 输入区：自适应高度 textarea + 发送/停止切换（圆形图标按钮），中文 IME 安全。 */
 export function Composer({ streaming, onSend, onStop }: Props) {
   const [value, setValue] = useState("");
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -48,16 +48,10 @@ export function Composer({ streaming, onSend, onStop }: Props) {
   return (
     <div
       className={cn(
-        "group flex items-end gap-2 rounded-2xl border border-input bg-card py-2 pl-3.5 pr-2 transition-all",
+        "group flex items-end gap-2 rounded-2xl border border-input bg-card py-2 pl-4 pr-2 transition-all",
         "focus-within:border-primary/50 focus-within:shadow-[0_0_24px_-8px_hsl(var(--primary)/0.5)]",
       )}
     >
-      <span
-        aria-hidden
-        className="pb-1.5 font-mono text-sm text-primary/40 transition-colors group-focus-within:text-primary"
-      >
-        &gt;
-      </span>
       <textarea
         ref={ref}
         value={value}

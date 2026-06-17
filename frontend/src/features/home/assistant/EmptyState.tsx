@@ -16,14 +16,14 @@ export function EmptyState({ onAsk }: { onAsk: (q: string) => void }) {
         <p className="text-base text-foreground/90">嗨，我是你的 AI 助手 👋</p>
         <p className="text-sm text-muted-foreground">有什么可以帮你的吗？</p>
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-2">
+      <div className="flex w-full max-w-md flex-col items-stretch gap-2">
         {SUGGESTED.map((q, i) => (
           <button
             key={q}
             type="button"
             onClick={() => onAsk(q)}
             style={{ animationDelay: `${i * 70}ms` }}
-            className="animate-in fade-in slide-in-from-bottom-2 rounded-full border border-primary/30 px-3.5 py-1.5 text-sm text-foreground/75 transition-colors hover:border-primary/60 hover:bg-primary/5 hover:text-foreground"
+            className="animate-in fade-in slide-in-from-bottom-2 rounded-2xl border border-border/70 bg-background px-3.5 py-2 text-left text-sm text-foreground/80 transition-colors hover:border-primary/40 hover:bg-primary/[0.04] hover:text-foreground"
           >
             {q}
           </button>

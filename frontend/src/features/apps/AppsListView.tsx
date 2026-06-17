@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { Copy, Plus, Settings2, Trash2 } from "lucide-react";
+import { Copy, MessageSquare, Plus, Settings2, Trash2 } from "lucide-react";
 
 import { copyApp, deleteApp, listApps } from "@/api/apps";
+import { AppIcon } from "@/components/shared/AppIcon";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { QueryGrid } from "@/components/shared/QueryGrid";
 import { SearchInput } from "@/components/shared/SearchInput";
-import { ToolIcon } from "@/components/shared/ToolIcon";
 import { Button } from "@/components/ui/button";
 import type { AppListItem } from "@/types/apps";
 
@@ -30,6 +30,8 @@ export function AppsListView() {
     mutationFn: (id: number) => deleteApp(id),
     onSuccess: () => {
       invalidate();
+      // 删除会连带下架其商店条目（后端 app_service.delete），失效商店缓存避免残留幽灵卡片。
+      queryClient.invalidateQueries({ queryKey: ["app-store"] });
       setPendingDelete(null);
     },
   });
@@ -53,7 +55,7 @@ export function AppsListView() {
         {(app) => (
           <div key={app.id} className="flex flex-col gap-3 rounded-lg border p-4">
             <Link to={`/apps/${app.id}`} className="flex items-start gap-3">
-              <ToolIcon src={app.icon} alt={app.name} />
+              <AppIcon icon={app.icon} name={app.name} />
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-2 truncate font-medium">
                   <span className="truncate">{app.name}</span>
@@ -70,6 +72,13 @@ export function AppsListView() {
                   <Settings2 className="h-4 w-4" /> 编排
                 </Link>
               </Button>
+              {app.status === "published" && (
+                <Button asChild variant="outline" size="sm">
+                  <Link to={`/apps/${app.id}/chat`} aria-label={`与 ${app.name} 对话`}>
+                    <MessageSquare className="h-4 w-4" /> 对话
+                  </Link>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

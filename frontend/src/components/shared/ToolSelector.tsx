@@ -1,5 +1,7 @@
 import { useMemo, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 import { listApiTools, listBuiltinTools } from "@/api/plugins";
 import { cn } from "@/lib/utils";
@@ -67,26 +69,46 @@ export function ToolSelector({ value, onChange }: Props) {
       </ToolGroup>
 
       <ToolGroup title="自定义 API 工具">
-        {(apiQuery.data?.list ?? []).flatMap((p) =>
-          p.tools.map((t) => {
-            const ref: ToolRef = {
-              type: "api_tool",
-              provider: { id: p.id, name: p.name },
-              tool: { id: t.id, name: t.name },
-            };
-            const key = toolRefKey(ref);
-            const checked = selectedKeys.has(key);
-            return (
-              <ToolRow
-                key={key}
-                label={t.name}
-                sub={`${p.name} · ${t.description}`}
-                checked={checked}
-                disabled={!checked && atLimit}
-                onToggle={() => toggle(ref)}
-              />
-            );
-          }),
+        {(apiQuery.data?.list ?? []).length === 0 && !apiQuery.isLoading ? (
+          <div className="rounded-md border border-dashed px-3 py-4 text-sm text-muted-foreground">
+            <p>还没有自定义工具。</p>
+            <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
+              <Link
+                to="/plugins/store"
+                className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+              >
+                去插件商店添加 <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                to="/plugins/custom/new"
+                className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+              >
+                创建 API 工具 <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        ) : (
+          (apiQuery.data?.list ?? []).flatMap((p) =>
+            p.tools.map((t) => {
+              const ref: ToolRef = {
+                type: "api_tool",
+                provider: { id: p.id, name: p.name },
+                tool: { id: t.id, name: t.name },
+              };
+              const key = toolRefKey(ref);
+              const checked = selectedKeys.has(key);
+              return (
+                <ToolRow
+                  key={key}
+                  label={t.name}
+                  sub={`${p.name} · ${t.description}`}
+                  checked={checked}
+                  disabled={!checked && atLimit}
+                  onToggle={() => toggle(ref)}
+                />
+              );
+            }),
+          )
         )}
       </ToolGroup>
     </div>

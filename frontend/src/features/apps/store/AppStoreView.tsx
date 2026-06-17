@@ -4,11 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Check, PackagePlus } from "lucide-react";
 
 import { addStoreApp, getAppStore } from "@/api/apps";
+import { AppIcon } from "@/components/shared/AppIcon";
 import { Pagination } from "@/components/shared/Pagination";
 import { QueryGrid } from "@/components/shared/QueryGrid";
 import { SearchInput } from "@/components/shared/SearchInput";
-import { ToolIcon } from "@/components/shared/ToolIcon";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/http/errors";
 
 const PAGE_SIZE = 12;
 
@@ -32,6 +33,8 @@ export function AppStoreView() {
       queryClient.invalidateQueries({ queryKey: ["apps"] });
       navigate(`/apps/${app.id}`);
     },
+    // 该条已被发布者下架/删除时后端返回 404：刷新列表抹掉幽灵卡片，并提示而非留个点不动的死按钮。
+    onError: () => queryClient.invalidateQueries({ queryKey: ["app-store"] }),
   });
 
   const onSearch = (v: string) => {
@@ -45,11 +48,17 @@ export function AppStoreView() {
     <div className="space-y-4">
       <SearchInput value={search} onChange={onSearch} placeholder="搜索应用商店" />
 
+      {addMutation.isError && (
+        <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          {getErrorMessage(addMutation.error)}
+        </p>
+      )}
+
       <QueryGrid isLoading={query.isLoading} items={list} emptyText="商店暂无应用。">
         {(app) => (
           <div key={app.id} className="flex flex-col gap-3 rounded-lg border p-4">
             <div className="flex items-start gap-3">
-              <ToolIcon src={app.icon} alt={app.name} />
+              <AppIcon icon={app.icon} name={app.name} />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{app.name}</p>
                 <p className="line-clamp-2 text-xs text-muted-foreground">
