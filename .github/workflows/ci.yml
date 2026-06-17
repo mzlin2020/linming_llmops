@@ -99,3 +99,38 @@ jobs:
       - name: Build
         working-directory: frontend
         run: npm run build
+
+  # Phase 6 出口闸：用 compose 拉起全栈，跑端到端冒烟脚本到 RAG 检索（本地嵌入，无需付费 key）。
+  # SSE-chat 步骤按 OPENAI_API_KEY secret 是否存在自动 skip。此 job 最重（torch 构建 + 全栈），用 buildx 缓存。
+  compose-smoke:
+    name: compose-smoke (full-stack e2e)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Prepare .env
+        working-directory: deploy
+        run: |
+          cp .env.example .env
+          # 注入 CI 测试值（仅本 job 用，绝非生产密钥）
+          {
+            echo "MYSQL_ROOT_PASSWORD=ci-changeme"
+            echo "mysql_server_password=ci-changeme"
+            echo "JWT_SECRET=ci-test-secret-please-change"
+            echo "AI_SECRET_ENCRYPT_KEY=ci-test-encrypt-key"
+            echo "INSTALL_ML=true"
+            echo "FRONTEND_PORT=8080"
+            # 若仓库配了 OPENAI_API_KEY secret 则透传（SSE 步骤才会跑），否则留空自动 skip
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
+          } >> .env
+      - name: Build & start full stack
+        run: |
+          docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+      - name: Run smoke test
+        run: bash deploy/smoke-test.sh
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose -f deploy/docker-compose.yml --env-file deploy/.env logs --tail=200
+      - name: Tear down
+        if: always()
+        run: docker compose -f deploy/docker-compose.yml --env-file deploy/.env down -v
