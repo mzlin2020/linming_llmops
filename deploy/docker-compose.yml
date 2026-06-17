@@ -137,7 +137,8 @@ services:
       backend:
         condition: service_started
     ports:
-      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+      # 绑定地址可配（默认仅本机 127.0.0.1）；远端服务器公网暴露设 FRONTEND_BIND=0.0.0.0
+      - "${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-8080}:80"
     networks:
       - llmops-net
 
