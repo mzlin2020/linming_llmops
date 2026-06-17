@@ -79,9 +79,9 @@ DEFAULT_CONFIG = {
     "CHANNEL_FAILURE_THRESHOLD": 3,
     "CHANNEL_COOLDOWN_SECONDS": 300,
 
-    # 图像生成（可选，v1.1，默认关闭）
-    "DEFAULT_IMAGE_PROVIDER": "volcengine_seedream",
-    "DEFAULT_IMAGE_MODEL": "doubao-seedream-5-0-260128",
+    # 图像生成（可选，v1.1，默认关闭；配置供应商后启用，未配置优雅降级）
+    "DEFAULT_IMAGE_PROVIDER": "",
+    "DEFAULT_IMAGE_MODEL": "",
     "QUOTA_IMAGE_DAILY_LIMIT": 100,
 
     # Agent 运行时

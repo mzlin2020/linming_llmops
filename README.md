@@ -1,39 +1,150 @@
 # linming_llmops
 
-目标：本项目是打算将/code目录下的linming项目的ai功能剥离为一个可开源的完整项目。
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 
-开发计划与规范
-1、项目包括前端和后端。是一个完整的llmops项目
-2、完全借鉴code/linming、code/linming_ai,除了用户与权限的逻辑。（如果有其他不适合移植或开源的也不应借鉴）
-3、技术栈不完全借鉴（前端nextjs改为React，后端基本一致）
-4、需要有完善的测试流程，每一阶段开发完毕都需要完整走测试
-5、敏感信息全部抽离为可配置
-6、开源项目届时需要抽取为非常方便用户运行。用户仅需填写.env配置，然后执行docker一键部署即可运行。
-7、注意借鉴/code下项目代码时，不要改到/code下的代码。只读即可。
+> **An open-source, Docker‑one‑click‑deployable LLMOps platform** — app orchestration, streaming chat (SSE), a RAG knowledge base, built‑in & API tools, and an assistant agent. Self‑contained lightweight auth, OpenAI‑compatible by default, local embeddings out of the box. Bring up the whole stack with `docker compose up`.
 
+`linming_llmops` 是一个**开源、可 Docker 一键部署的 LLMOps 平台**：应用编排 + 流式对话（SSE）+ RAG 知识库 + 工具/插件 + 助手 Agent。内置轻量登录（无需外部网关），默认对接 OpenAI 兼容接口，知识库向量化走**本地嵌入模型**——干净主机上三条命令即可起完整栈、浏览器直接使用。
 
-## 开发阶段划分
+---
 
-> 完整开发指导（背景、关键决策、解耦点、测试策略、风险登记）见 [`docs/开发指南.md`](docs/开发指南.md)。
+## ✨ 功能特性
 
-### 已确定的关键决策
-- **身份方案**：内置轻量登录（自建 `account` 表 + 账号密码），无管理员概念，排除复杂 RBAC。
-- **模型供应商**：OpenAI 兼容为默认；Anthropic / 火山 Ark 为可选插件；图像生成 / TTS 默认关闭。
-- **存储**：本地磁盘默认（替换原对网关服务 OSS 的委托），保留 S3/MinIO 适配器供 env 切换。
-- **v1 范围**：核心优先（应用编排 + 对话/SSE + 知识库/RAG + 内置/API 工具 + 助手 agent）；工作流编辑器、图像、TTS 后置到 v1.1。
-- 默认栈：后端 Flask + MySQL 8 + Redis + Celery + Qdrant；前端 Vite + React SPA（nginx 托管并反代）。
+- **应用编排** — 创建并配置 AI 应用（模型、提示词、工具、知识库、对话开场白等 14 项配置），一处编排、多处调用。
+- **流式对话（SSE）** — 基于 POST + `ReadableStream` 的框架无关流式协议，逐 token 实时返回，支持中断/停止。
+- **RAG 知识库** — 文档导入 → 自动切分 → 向量索引（Qdrant）→ 语义/混合检索与命中测试；向量化由**本地嵌入模型**完成，检索本身不需要付费 key。
+- **工具 / 插件** — 内置工具框架 + 自定义 API 工具（OpenAPI/HTTP），让 Agent 调用外部能力。
+- **助手 Agent** — 可绑定工具与知识库的对话式 Agent，支持多轮工具调用。
+- **LLM 目录与管理** — 多供应商/多渠道模型目录，渠道凭证落库加密、多渠道兜底熔断。
+- **OpenAPI 外部调用** — 以 API Key 鉴权的对外接口，供第三方系统集成。
+- **文件上传与管理** — 本地磁盘存储（S3/MinIO 适配器接口预留）。
 
-### 阶段总览
-依赖主线：**基础设施 → 认证接缝 →（数据模型 → 迁移基线）→ 核心引擎 → 服务/存储 → 前端 → 一键部署 → 开源打磨 →（v1.1：工作流/图像/TTS）**。每阶段以「累计测试全绿」为出口。
+> **v1.1 延后**（已在路线图中规划，本版不含）：工作流可视化编辑器、图像生成、TTS。详见 [`docs/ROADMAP.md`](docs/ROADMAP.md)。
 
-| 阶段 | 名称 | 目标 |
+---
+
+## 🧱 架构一览
+
+```
+                ┌─────────────────────────────────────────────┐
+   浏览器  ───▶ │  frontend  (nginx)                          │
+                │   • Vite + React 18 SPA 静态托管             │
+                │   • /api 反向代理（SSE 不缓冲）              │
+                └───────────────┬─────────────────────────────┘
+                                │  /api
+                ┌───────────────▼─────────────┐   ┌──────────────────────┐
+                │  backend  (Flask + gunicorn) │   │  celery-worker        │
+                │   • REST + POST-SSE          │   │   • 文档解析/向量索引 │
+                │   • 轻量登录(JWT) + OpenAPI  │   │   • 异步任务          │
+                └───────┬──────────┬───────────┘   └──────────┬───────────┘
+                        │          │                          │
+            ┌───────────▼──┐  ┌────▼─────┐  ┌─────────────────▼──┐
+            │  MySQL 8     │  │  Redis   │  │  Qdrant            │
+            │  业务数据    │  │ 缓存/队列│  │  向量库            │
+            └──────────────┘  └──────────┘  └────────────────────┘
+```
+
+- 嵌入模型：本地 `BAAI/bge-small-zh-v1.5`（512 维，首启自动下载到缓存卷）。
+- `backend` 与 `celery-worker` 共享上传文件卷（web 存上传 → worker 读取并索引）。
+- 技术栈：后端 **Flask 3.1 + injector DI + SQLAlchemy + Alembic + Celery**；前端 **Vite + React 18 + TypeScript + TanStack Query + Zustand + Tailwind**；基础设施 **MySQL 8 / Redis 7 / Qdrant**。
+
+详尽设计见 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)。
+
+---
+
+## 🚀 快速开始（Docker 一键部署）
+
+干净主机（装好 Docker + Docker Compose）上三步起完整栈：
+
+```bash
+# 1) 准备配置
+cp deploy/.env.example deploy/.env
+
+# 2) 编辑 deploy/.env，至少改这几项：
+#    JWT_SECRET、AI_SECRET_ENCRYPT_KEY、MYSQL_ROOT_PASSWORD  → 改成随机长串
+#    OPENAI_API_KEY（或兼容端点 OPENAI_BASE_URL）           → 对话 / RAG 需要 LLM
+
+# 3) 起栈（首次会构建镜像、下载嵌入模型，耐心等几分钟）
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+```
+
+启动完成后浏览器打开 **http://127.0.0.1:8080**（端口由 `FRONTEND_PORT` 决定），注册账号即可使用。
+
+端到端冒烟（注册 → 建应用 → SSE 对话 → 建知识库 → RAG 检索）：
+
+```bash
+bash deploy/smoke-test.sh
+```
+
+> 部署细节、国内镜像加速、服务/端口/卷说明、SSE 不缓冲自查、轻量模式等见 [`deploy/README.md`](deploy/README.md)。
+
+---
+
+## ⚙️ 配置参考
+
+完整配置（含分组注释）见 [`deploy/.env.example`](deploy/.env.example)。最常用的几项：
+
+| 变量 | 作用 | 生产是否必改 |
 |---|---|---|
-| Phase 0 | 脚手架 + 基础设施 + 决策锁定 | 目录骨架；compose 起 MySQL/Redis/Qdrant；派生 `.env.example`；CI 骨架 |
-| Phase 1 | 后端骨架 + 轻量登录认证 | Flask 应用壳可启动；自建登录替换原网关 JWT 耦合；保留 `current_user` 接缝 |
-| Phase 2 | 数据模型 + 重建迁移基线 | 去 `user.id` 外键；自建 `account` 表；压平为单条可自举的 `0001_initial` |
-| Phase 3 | 核心 AI 引擎移植 | `internal/core/*`（语言模型/嵌入/向量/agent/工具/文件解析）；供应商可配置 |
-| Phase 4 | 服务+处理器移植 + 自托管存储 | v1 服务/处理器/Celery；本地磁盘存储适配器；配额拍平 |
-| Phase 5 | 前端重写（Vite React SPA） | 核心 AI 界面 + 框架无关 POST-SSE；排除工作流/图像/TTS |
-| Phase 6 | Docker 一键部署 + 集成硬化 | 全栈 compose；启动即迁移；端到端冒烟 |
-| Phase 7 | 开源打磨（v1 发布） | README/LICENSE/`.env.example`/CONTRIBUTING；清除中国特有默认值 |
-| Phase 8 | v1.1：工作流 + 图像 + TTS | 暴露工作流引擎 + xyflow 编辑器；图像/TTS 供应商可插拔 |
+| `JWT_SECRET` | 登录令牌签名密钥 | ✅ 必改（随机长串） |
+| `AI_SECRET_ENCRYPT_KEY` | provider/渠道 API Key 落库加密 | ✅ 必改（改后旧密文需重填） |
+| `MYSQL_ROOT_PASSWORD` | 数据库密码 | ✅ 必改 |
+| `OPENAI_API_KEY` / `OPENAI_BASE_URL` | 对话 / RAG 的 LLM 凭证（或兼容端点） | 用对话/RAG 则填 |
+| `FRONTEND_PORT` | 前端对外端口（默认 8080） | 按需 |
+| `INSTALL_ML` | 是否装本地嵌入栈（RAG 需要，默认 true） | 默认即可 |
+| `HF_ENDPOINT` | 嵌入模型下载镜像（国内设 `https://hf-mirror.com`） | 国内建议 |
+| `QDRANT_API_KEY` | 向量库鉴权（默认无） | 生产建议填 |
+
+供应商/模型（OpenAI 兼容、Anthropic、DeepSeek、火山 Ark 可选；本地嵌入；可选图像/TTS）的配置指南见 [`docs/PROVIDERS.md`](docs/PROVIDERS.md)。
+
+---
+
+## 🛠️ 本地开发
+
+详见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。速览：
+
+```bash
+# 后端（backend/，Python 3.11+）
+pip install -r requirements.txt -r requirements-dev.txt
+SQLALCHEMY_DATABASE_URI="sqlite:////tmp/dev.db" JWT_SECRET=test AI_SECRET_ENCRYPT_KEY=test pytest
+
+# 前端（frontend/，Node 18+）
+npm ci
+npm run test       # vitest
+npm run build      # typecheck + 构建
+```
+
+---
+
+## 📦 项目结构
+
+```
+backend/    Flask API + Celery worker + Alembic 迁移
+frontend/   Vite + React + TypeScript SPA（nginx 容器）
+deploy/     docker-compose.yml + .env.example + smoke-test.sh + README
+docs/       架构、路线图、供应商配置指南
+```
+
+---
+
+## 🗺️ 路线图
+
+v1 已交付：基础设施 → 轻量登录 → 数据模型/迁移 → 核心 AI 引擎 → 服务/存储 → 前端 SPA → Docker 一键部署 → 开源发布。
+v1.1 计划：工作流可视化编辑器、图像生成、TTS。
+
+完整阶段表与状态见 [`docs/ROADMAP.md`](docs/ROADMAP.md)。
+
+---
+
+## 🔒 安全
+
+默认凭证必须修改、密钥管理与漏洞上报方式见 [`SECURITY.md`](SECURITY.md)。
+
+## 🤝 贡献
+
+欢迎 issue 与 PR，约定见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
+
+## 📄 License
+
+[Apache License 2.0](LICENSE)。
