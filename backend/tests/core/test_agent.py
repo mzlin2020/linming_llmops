@@ -110,7 +110,7 @@ class TestToolResolver:
         assert self._resolver().resolve(cfg) == []
 
     def test_admin_only_gate(self, monkeypatch):
-        # 现网无 admin_only 内置工具（image_generation 已跳过），临时把 time 标成 admin_only 验证闸门双分支
+        # 现网内置工具均非 admin_only（image_generation 在 v1.1 改为对所有人开放），临时把 time 标成 admin_only 验证闸门双分支
         resolver = self._resolver()
         provider = resolver.builtin_provider_manager.get_provider("time")
         monkeypatch.setattr(provider.provider_entity, "admin_only", True)

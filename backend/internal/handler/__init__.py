@@ -17,6 +17,7 @@ from .api_tool_handler import ApiToolHandler
 from .llm_admin_handler import LlmAdminHandler
 from .openapi_handler import OpenAPIHandler
 from .workflow_handler import WorkflowHandler
+from .image_generation_handler import ImageGenerationHandler
 
 __all__ = [
     "PingHandler",
@@ -41,4 +42,6 @@ __all__ = [
     "OpenAPIHandler",
     # 工作流（v1.1）
     "WorkflowHandler",
+    # 图像生成（v1.1）
+    "ImageGenerationHandler",
 ]
