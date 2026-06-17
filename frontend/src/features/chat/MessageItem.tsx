@@ -1,6 +1,7 @@
 import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -26,14 +27,51 @@ const MARKDOWN_PROSE = cn(
   "[&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:text-muted-foreground",
 );
 
+/** user 气泡上方附件区：图片缩略图（点击新开原图）+ 文档 chip（点击打开/下载）。 */
+function UserAttachments({ message }: { message: ChatMessage }) {
+  const images = message.imageUrls ?? [];
+  const files = message.fileInfos ?? [];
+  if (images.length === 0 && files.length === 0) return null;
+  return (
+    <div className="flex max-w-[82%] flex-wrap justify-end gap-1.5">
+      {images.map((url) => (
+        <a key={url} href={url} target="_blank" rel="noreferrer">
+          <img
+            src={url}
+            alt="附件图片"
+            loading="lazy"
+            className="size-24 rounded-xl border border-border/60 object-cover sm:size-28"
+          />
+        </a>
+      ))}
+      {files.map((f) => (
+        <a
+          key={f.url}
+          href={f.url}
+          target="_blank"
+          rel="noreferrer"
+          title={f.name}
+          className="flex max-w-[200px] items-center gap-1.5 rounded-lg border border-border/60 bg-muted/40 px-2.5 py-1.5 text-xs text-foreground/80 transition-colors hover:border-primary/40"
+        >
+          <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+          <span className="truncate">{f.name}</span>
+        </a>
+      ))}
+    </div>
+  );
+}
+
 // memo：流式期间只有末条消息引用在变，历史消息不必随每个 delta 重渲（Markdown 解析不便宜）。
 export const MessageItem = memo(function MessageItem({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[82%] whitespace-pre-wrap break-words rounded-2xl rounded-tr-md border border-primary/20 bg-primary/5 px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
-          {message.content}
-        </div>
+      <div className="flex flex-col items-end gap-1.5">
+        <UserAttachments message={message} />
+        {message.content ? (
+          <div className="max-w-[82%] whitespace-pre-wrap break-words rounded-2xl rounded-tr-md border border-primary/20 bg-primary/5 px-4 py-2.5 text-[15px] leading-relaxed text-foreground/90">
+            {message.content}
+          </div>
+        ) : null}
       </div>
     );
   }

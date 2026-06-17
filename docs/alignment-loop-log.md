@@ -52,8 +52,10 @@
       自动滚动 hook、停止流程已核为忠实移植/同构、无差异。）
 - [ ] **聊天附件上传/展示**（大特性，多轮）：参考 `message-composer`/`attachment-picker`/`message-bubble`
       支持图片+文档的拖拽/粘贴/选择上传与气泡展示，后端配额/白名单已就绪（CHAT_* 配置），
-      但我们 `Composer` 仅纯文本。需拆：①上传 api+lib ②AttachmentPicker+预览 ③气泡附件渲染
-      ④useChatStream 传附件。受 `CHAT_ATTACHMENT_URL_PREFIXES` 域名白名单门控（默认空=拒绝）。
+      但我们 `Composer` 仅纯文本。受 `CHAT_ATTACHMENT_URL_PREFIXES` 域名白名单门控（默认空=拒绝）。
+      增量进度：①✓ **气泡附件渲染 + 历史映射**（见已完成记录 2026-06-18，增量1/3）；
+      ②☐ Composer 选图/预览 + 上传(`uploadFile` 已有) + useChatStream 传 image_urls/file_urls（增量2）；
+      ③☐ 拖拽/粘贴 + vision 模型自动切换（增量3，可选）。先做首页助手图片，再扩 debug/published。
 - [ ] 应用编排（orchestrate）：模型参数面板、工具/知识库/工作流选择器的交互与校验、调试面板、
       发布流程提示、开场白/开场问题编辑体验。
       （✓ 已对齐：**回答后建议追问 chips**（debug+published）、**携带上下文轮数改 Slider**，见已完成记录 2026-06-18。
@@ -101,3 +103,9 @@
   非法值直接打到后端。新增纯函数 `types/datasets.validateProcessRule`，modal 中 custom 模式算 ruleError →
   禁用「创建」+ 内联红字提示。先核 ChatEmptyState/ThinkingIndicator 为忠实移植无差异、ProcessRuleForm 控件同构。
   后端未改。 | 124 passed（+4，含校验器单测）、typecheck+build 绿 | 见本次提交（feat: segment-rule validation）
+- 2026-06-18 06:27 | **聊天附件展示 + 历史映射（附件特性增量 1/3）** | 后端历史 `.../messages` 每轮已回
+  `image_urls`/`file_infos`（模型有列、`_message_view` 映射），前端从未读取/渲染。`chat-core`：`ChatMessage`
+  加 `imageUrls`/`fileInfos`+`ChatFileInfo` 类型、`HistoryRound` 加 `image_urls`/`file_infos`、`historyToMessages`
+  映射到 user 气泡；`MessageItem` user 气泡上方渲染图片缩略图(点击新开)+文档 chip(忠实移植参考 message-bubble)。
+  低风险：不动 Composer/发送路径。后端未改。**注：发送路径(增量2)未做，故现暂无新附件可显示——为下轮铺路。**
+  | 128 passed（+4）、typecheck+build 绿 | 见本次提交（feat: chat attachment display）

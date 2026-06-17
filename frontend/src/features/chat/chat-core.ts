@@ -9,6 +9,13 @@ export type MessageRole = "user" | "assistant";
 /** UI 气泡状态。注意：UI 一条 = 一个气泡，后端「一轮 = query + answer」加载时拆成两条。 */
 export type MessageStatus = "sending" | "streaming" | "done" | "error" | "stopped";
 
+/** 文档附件元数据（对齐后端 MessageItem.file_infos 的 {url,name,extension}）。 */
+export interface ChatFileInfo {
+  url: string;
+  name: string;
+  extension?: string;
+}
+
 export interface ChatMessage {
   /** 渲染稳定 key（历史用 round id 派生，新发用时间戳派生）。 */
   key: string;
@@ -17,6 +24,10 @@ export interface ChatMessage {
   status: MessageStatus;
   /** 后端消息（轮）id：助手气泡完成后回填，供「建议追问」按 message_id 拉 follow-up。 */
   id?: number;
+  /** 本轮图片附件 URL（仅 user 气泡：缩略图渲染）。 */
+  imageUrls?: string[];
+  /** 本轮文档附件元数据（仅 user 气泡：文件 chip 渲染）。 */
+  fileInfos?: ChatFileInfo[];
 }
 
 /** 消息分页出参的一轮（对齐后端 MessageItem，仅取本期所需字段）。 */
@@ -27,6 +38,10 @@ export interface HistoryRound {
   /** normal | stop | error */
   status: string;
   error: string;
+  /** 本轮用户图片附件 URL。 */
+  image_urls?: string[];
+  /** 本轮用户文档附件元数据。 */
+  file_infos?: ChatFileInfo[];
 }
 
 /** SSE data 载荷（QueueEvent，见 backend/internal/entity/chat_entity.py）。 */
@@ -156,7 +171,14 @@ function mapRoundStatus(status: string): MessageStatus {
 export function historyToMessages(rounds: HistoryRound[]): ChatMessage[] {
   const out: ChatMessage[] = [];
   for (const r of [...rounds].reverse()) {
-    out.push({ key: `h-${r.id}-user`, role: "user", content: r.query, status: "done" });
+    out.push({
+      key: `h-${r.id}-user`,
+      role: "user",
+      content: r.query,
+      status: "done",
+      imageUrls: r.image_urls ?? [],
+      fileInfos: r.file_infos ?? [],
+    });
     const status = mapRoundStatus(r.status);
     out.push({
       key: `h-${r.id}-assistant`,
