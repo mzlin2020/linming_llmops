@@ -75,18 +75,22 @@ describe("AssistantChat", () => {
     expect(await screen.findByText(/已停止生成/)).toBeInTheDocument();
   });
 
-  it("空状态点击建议问题 → 以该问题发起流式", async () => {
+  it("空状态点击引导便签 → 以该提示发起流式", async () => {
     mockStream.mockImplementation(async (_url, _body, { onEvent }) => {
       onEvent({ event: "agent_end", data: { status: "normal" } });
     });
     await renderReady();
 
-    fireEvent.click(screen.getByText("什么是 RAG？"));
+    // 便签文案每次随机，取第一张卡片的实际文本来断言（与内容解耦）。
+    const card = screen.getAllByTestId("starter-prompt")[0];
+    const prompt = card.textContent ?? "";
+    expect(prompt.length).toBeGreaterThan(0);
+    fireEvent.click(card);
 
     await waitFor(() =>
       expect(mockStream).toHaveBeenCalledWith(
         "/assistant-agent/chat",
-        { query: "什么是 RAG？" },
+        { query: prompt },
         expect.anything(),
       ),
     );
@@ -116,6 +120,6 @@ describe("AssistantChat", () => {
     fireEvent.click(screen.getByLabelText("清空对话"));
 
     await waitFor(() => expect(mockClear).toHaveBeenCalled());
-    expect(await screen.findByText(/我是你的 AI 助手/)).toBeInTheDocument();
+    expect(await screen.findByText(/今天想聊点什么/)).toBeInTheDocument();
   });
 });

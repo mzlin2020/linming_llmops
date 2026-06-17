@@ -47,8 +47,9 @@
 > 优先级从上到下递减；前端交互类优先。
 
 - [ ] 首页助手（`/code/linMing` 对应页 vs `frontend/src/features/home/assistant`）：流式渲染、
-      思考态、停止/重试、建议追问、空态、滚动行为等交互细节。
-      （✓ 已对齐：**头部模型选择器**——见已完成记录 2026-06-18；自动滚动 hook 已核为忠实移植、无差异。）
+      思考态、停止/重试、滚动行为等交互细节。
+      （✓ 已对齐：**头部模型选择器**、**空态四类随机引导便签**——见已完成记录 2026-06-18；
+      自动滚动 hook、停止流程已核为忠实移植/同构、无差异。）
 - [ ] **聊天附件上传/展示**（大特性，多轮）：参考 `message-composer`/`attachment-picker`/`message-bubble`
       支持图片+文档的拖拽/粘贴/选择上传与气泡展示，后端配额/白名单已就绪（CHAT_* 配置），
       但我们 `Composer` 仅纯文本。需拆：①上传 api+lib ②AttachmentPicker+预览 ③气泡附件渲染
@@ -89,3 +90,8 @@
   控制 dialog_round，我们用数字 Input。改为原生 range 滑块(accent-primary 主题色)+实时数值+「携带最近 N 轮历史」
   提示(范围用我们后端常量 0–100)。先排除了模型参数面板(参考站也无)、插件领域(已对齐)等。后端未改。
   | 120 passed（+1）、typecheck+build 绿 | 见本次提交（feat: dialog-round slider）
+- 2026-06-18 04:26 | **首页助手空态四类随机引导便签** | 参考 `chat-empty` 空态是 4 类(写作/读书/代码/心情)
+  便签卡片、每类 10 条、进入/新对话随机各取一条、点击即发；我们原是 4 条固定建议竖列。重写 `EmptyState.tsx`
+  为同款(便签图标+「今天想聊点什么？」+4 卡片随机取词，genericize 去「华语」)。同步改 AssistantChat.test
+  两处旧文案断言(改 data-testid 取卡片实际文本、标题断言)。先核应用商店/store-app-card 已同构、不做。后端未改。
+  | 120 passed、typecheck+build 绿 | 见本次提交（feat: assistant empty-state starter cards）
