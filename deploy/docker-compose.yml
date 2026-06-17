@@ -1,12 +1,14 @@
-# linming_llmops —— 基础设施编排（Phase 0：仅 MySQL / Redis / Qdrant）
+# linming_llmops —— 全栈一键部署编排（基础设施 + 后端 web/worker + 前端 nginx）。
 #
 # 用法（在仓库根目录执行）：
-#   cp deploy/.env.example deploy/.env   # 按需修改密码等
-#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d
-#   docker compose -f deploy/docker-compose.yml ps     # mysql/redis 应为 healthy
-#   curl http://127.0.0.1:6333/readyz                  # Qdrant 就绪应返回 200
+#   cp deploy/.env.example deploy/.env        # 至少填 JWT_SECRET / AI_SECRET_ENCRYPT_KEY / MYSQL_ROOT_PASSWORD；对话/RAG 填 OPENAI_API_KEY
+#   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+#   docker compose -f deploy/docker-compose.yml ps        # mysql/redis 应为 healthy
+#   # 浏览器打开 http://127.0.0.1:8080 （FRONTEND_PORT 可改）
+#   bash deploy/smoke-test.sh                              # 端到端冒烟
 #
-# 应用容器（backend / celery / frontend）将在后续阶段加入。
+# 说明：backend/celery-worker 镜像默认装本地 ML 嵌入栈（INSTALL_ML=true，约 2GB，首启下载嵌入模型到 hf-cache 卷）。
+#       国内构建/下载慢时在 .env 设 HF_ENDPOINT=https://hf-mirror.com、PIP_INDEX_URL/TORCH_INDEX_URL 镜像。
 name: linming-llmops
 
 services:
@@ -61,14 +63,18 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
     # 说明：qdrant 官方镜像无 shell/curl，容器内 healthcheck 不可靠，
-    # 故此处不设 healthcheck，改由外部轮询 http://127.0.0.1:6333/readyz 判定就绪。
+    # 故此处不设 healthcheck，依赖方用 condition: service_started，应用侧连接自带重试。
     networks:
       - llmops-net
 
-  # 后端 API（Phase 1：骨架 + 自建轻量登录）。celery-worker 容器留 Phase 4。
+  # 后端 API（gunicorn）。启动即迁移（+ 可选 bootstrap account），随后服务。
   backend:
     build:
       context: ../backend
+      args:
+        INSTALL_ML: "${INSTALL_ML:-true}"
+        PIP_INDEX_URL: "${PIP_INDEX_URL:-https://pypi.org/simple}"
+        TORCH_INDEX_URL: "${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}"
     restart: unless-stopped
     env_file: .env
     environment:
@@ -80,8 +86,58 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      qdrant:
+        condition: service_started
     ports:
-      - "127.0.0.1:5001:5001"
+      - "127.0.0.1:${BACKEND_PORT:-5001}:5001"
+    volumes:
+      # 与 celery-worker 共享：web 存上传文件 → worker 读它做切分/向量化（RAG 索引硬前提）
+      - storage-data:/app/storage
+      # 嵌入模型权重缓存，避免每次重启重复下载
+      - hf-cache:/root/.cache/huggingface
+    networks:
+      - llmops-net
+
+  # Celery worker：知识库索引 / 文档解析 / 会话异步任务。不迁移（由 backend 负责）。
+  celery-worker:
+    build:
+      context: ../backend
+      args:
+        INSTALL_ML: "${INSTALL_ML:-true}"
+        PIP_INDEX_URL: "${PIP_INDEX_URL:-https://pypi.org/simple}"
+        TORCH_INDEX_URL: "${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}"
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      MODE: celery
+      MIGRATION_ENABLED: "false"
+      FLASK_ENV: ${FLASK_ENV:-production}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+    volumes:
+      # 必须与 backend 同卷同挂载点，否则 worker 看不到 web 上传的文件、且重复下载模型
+      - storage-data:/app/storage
+      - hf-cache:/root/.cache/huggingface
+    networks:
+      - llmops-net
+
+  # 前端 SPA（nginx 静态托管 + 反代 /api，含 SSE 不缓冲）。upstream 经 envsubst 注入。
+  frontend:
+    build:
+      context: ../frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-backend:5001}
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
     networks:
       - llmops-net
 
@@ -89,6 +145,8 @@ volumes:
   mysql-data:
   redis-data:
   qdrant-data:
+  storage-data:
+  hf-cache:
 
 networks:
   llmops-net:
