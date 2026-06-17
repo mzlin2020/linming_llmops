@@ -24,7 +24,8 @@ import { AccountView } from "@/features/settings/account/AccountView";
 import { ApiKeysView } from "@/features/settings/api-keys/ApiKeysView";
 import { ModelsView } from "@/features/settings/models/ModelsView";
 import { SettingsLayout } from "@/features/settings/SettingsLayout";
-import { WorkflowPage } from "@/features/workflow/WorkflowPage";
+import { WorkflowEditorPage } from "@/features/workflow/editor/WorkflowEditorPage";
+import { WorkflowListPage } from "@/features/workflow/WorkflowListPage";
 import { RequireAuth } from "./guards";
 
 export const router = createBrowserRouter([
@@ -80,7 +81,13 @@ export const router = createBrowserRouter([
           { path: ":id/documents/:docId/segments", element: <SegmentsView /> },
         ],
       },
-      { path: "workflow", element: <WorkflowPage /> },
+      {
+        path: "workflow",
+        children: [
+          { index: true, element: <WorkflowListPage /> },
+          { path: ":id", element: <WorkflowEditorPage /> },
+        ],
+      },
       {
         path: "settings",
         element: <SettingsLayout />,

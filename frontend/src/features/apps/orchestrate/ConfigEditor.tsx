@@ -6,6 +6,7 @@ import { listLanguageModels } from "@/api/apps";
 import { optimizePresetPrompt, suggestOpeningQuestions } from "@/api/ai";
 import { DatasetSelector } from "@/components/shared/DatasetSelector";
 import { ToolSelector } from "@/components/shared/ToolSelector";
+import { WorkflowSelector } from "@/components/shared/WorkflowSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -89,6 +90,10 @@ export function ConfigEditor({ value, onChange }: Props) {
 
       <Section title="知识库">
         <DatasetSelector value={value.datasets} onChange={(datasets) => set({ datasets })} />
+      </Section>
+
+      <Section title="工作流">
+        <WorkflowSelector value={value.workflows} onChange={(workflows) => set({ workflows })} />
       </Section>
 
       <Section title="能力开关">

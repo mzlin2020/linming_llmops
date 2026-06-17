@@ -29,6 +29,12 @@
 - `ENABLE_LLM_ADMIN`（默认关）控制「模型目录写入面」——该面涉及全局共享凭证目录，仅在单运维可信部署下开启。
 - 自助注册由 `ALLOW_REGISTRATION` 控制；对外暴露的实例建议关闭后改用预置账号（`BOOTSTRAP_ACCOUNT_*`）。
 
+## 工作流代码节点
+
+- 工作流的 **Python 代码节点** 在三层沙箱中执行：stdlib AST 静态检查（拒危险调用）→ 受限内置 → 子进程 + 资源限制（`WORKFLOW_CODE_TIMEOUT_SECONDS` / `WORKFLOW_CODE_MAX_OUTPUT_BYTES`）。
+- 因本平台**无管理员概念**，代码节点对**所有登录用户**开放（工作流校验按 `is_admin=True` 放行）；同样地，工作流内可使用标记 `admin_only` 的内置工具。沙箱是**纵深防御而非绝对边界**。
+- 面向不可信用户开放注册的实例，建议据此评估风险：关闭自助注册（`ALLOW_REGISTRATION=false`）、做网络隔离，或在受信任的单运维部署下使用。
+
 ## 漏洞上报
 
 如发现安全问题，请**不要**直接开公开 issue。优先通过 GitHub 的 **Private Vulnerability Reporting**（仓库 Security 标签页）私下上报；或以最小可复现信息私下联系维护者。我们会尽快响应并在修复后致谢。
