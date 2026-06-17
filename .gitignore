@@ -32,5 +32,6 @@ dist/
 .idea/
 .vscode/
 
-# ---- 本地专用 Claude Code 指引（含私有源 /code/linMing* 引用，不进开源历史）----
+# ---- 本地专用文档（含内部移植笔记，不进开源公开历史）----
 CLAUDE.md
+docs/开发指南.md
