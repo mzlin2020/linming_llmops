@@ -53,9 +53,12 @@
 - [ ] **聊天附件上传/展示**（大特性，多轮）：参考 `message-composer`/`attachment-picker`/`message-bubble`
       支持图片+文档的拖拽/粘贴/选择上传与气泡展示，后端配额/白名单已就绪（CHAT_* 配置），
       但我们 `Composer` 仅纯文本。受 `CHAT_ATTACHMENT_URL_PREFIXES` 域名白名单门控（默认空=拒绝）。
-      增量进度：①✓ **气泡附件渲染 + 历史映射**（见已完成记录 2026-06-18，增量1/3）；
-      ②☐ Composer 选图/预览 + 上传(`uploadFile` 已有) + useChatStream 传 image_urls/file_urls（增量2）；
-      ③☐ 拖拽/粘贴 + vision 模型自动切换（增量3，可选）。先做首页助手图片，再扩 debug/published。
+      增量进度：①✓ **气泡附件渲染 + 历史映射**（增量1，见已完成记录）。
+      **⚠️ 增量2（发送）经核实被阻塞——非纯前端**：上传 `/upload-files/file` 的 `to_dict` **只回 `key`、不回 URL**；
+      后端**无通用上传文件服务路由**（仅 `serve_image_file` 服务生成图）；而 chat 附件需一个**可被后端/LLM 拉取的公网
+      URL** 且必须命中 `CHAT_ATTACHMENT_URL_PREFIXES` 白名单（默认空=拒）。故发送附件需：(a) 后端上传返回公网 URL +
+      (b) 新增上传文件服务路由（可仿 `serve_image_file`）+ (c) 部署设 `FILES_BASE_URL`/`CHAT_ATTACHMENT_URL_PREFIXES`
+      + (d) 安全评审（公开服务用户上传文件 / SSRF）。**涉及后端改动+部署配置+安全面，建议经用户拍板后专门做，勿在自动循环单方面推进。**
 - [ ] 应用编排（orchestrate）：模型参数面板、工具/知识库/工作流选择器的交互与校验、调试面板、
       发布流程提示、开场白/开场问题编辑体验。
       （✓ 已对齐：**回答后建议追问 chips**（debug+published）、**携带上下文轮数改 Slider**，见已完成记录 2026-06-18。
@@ -109,3 +112,8 @@
   映射到 user 气泡；`MessageItem` user 气泡上方渲染图片缩略图(点击新开)+文档 chip(忠实移植参考 message-bubble)。
   低风险：不动 Composer/发送路径。后端未改。**注：发送路径(增量2)未做，故现暂无新附件可显示——为下轮铺路。**
   | 128 passed（+4）、typecheck+build 绿 | 见本次提交（feat: chat attachment display）
+- 2026-06-18 07:33 | **聊天「清空会话」二次确认** | 参考 `debug-preview` 清空用 AlertDialog 确认（销毁不可恢复），
+  且我们全站销毁操作（删应用/库/片段/插件…）本就用 `ConfirmDialog`，唯独聊天清空直接清、无确认。把现有
+  `ConfirmDialog` 接到 DebugChatPanel + PublishedChat 的清空按钮（destructive，确认后才调清空端点）。首页助手
+  清空照参考用 title 提示、不弹框（保持一致）。**本轮另核实并记录附件增量2 被后端/部署/安全阻塞（见 backlog）。**
+  后端未改。 | 129 passed（+1 确认门控测试）、typecheck+build 绿 | 见本次提交（feat: confirm before clearing chat）

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/sse/stream-sse", () => ({ streamSSE: vi.fn() }));
 vi.mock("@/lib/http/client", () => ({ get: vi.fn(), post: vi.fn() }));
 
-import { get } from "@/lib/http/client";
+import { get, post } from "@/lib/http/client";
 import { streamSSE } from "@/lib/sse/stream-sse";
 import { renderWithProviders } from "@/test/render";
 
@@ -12,6 +12,7 @@ import { DebugChatPanel } from "./DebugChatPanel";
 
 const mockStream = vi.mocked(streamSSE);
 const mockGet = vi.mocked(get);
+const mockPost = vi.mocked(post);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -43,6 +44,25 @@ describe("DebugChatPanel", () => {
         { query: "hi" },
         expect.objectContaining({ onEvent: expect.any(Function) }),
       ),
+    );
+  });
+
+  it("清空需二次确认：确认前不清空，确认后才调 delete-debug-conversation", async () => {
+    // 有历史一轮 → 渲染出「清空」按钮
+    mockGet.mockResolvedValue({
+      list: [{ id: 1, query: "问", answer: "答", status: "normal", error: "" }],
+      paginator: { current_page: 1, page_size: 20, total_page: 1, total_record: 1 },
+    } as never);
+    mockPost.mockResolvedValue(undefined as never);
+    renderWithProviders(<DebugChatPanel appId={7} />);
+
+    fireEvent.click(await screen.findByLabelText("清空调试对话"));
+    expect(await screen.findByText("清空调试对话？")).toBeInTheDocument();
+    expect(mockPost).not.toHaveBeenCalledWith("/apps/7/conversations/delete-debug-conversation");
+
+    fireEvent.click(screen.getByRole("button", { name: "清空" }));
+    await waitFor(() =>
+      expect(mockPost).toHaveBeenCalledWith("/apps/7/conversations/delete-debug-conversation"),
     );
   });
 });

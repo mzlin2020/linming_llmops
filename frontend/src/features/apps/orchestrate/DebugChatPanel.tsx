@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Brain, RotateCcw } from "lucide-react";
 
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ChatEmptyState } from "@/features/chat/ChatEmptyState";
 import { ChatPanel } from "@/features/chat/ChatPanel";
 import { historyToMessages, type HistoryRound } from "@/features/chat/chat-core";
@@ -31,6 +32,7 @@ export function DebugChatPanel({
   suggestAfterAnswer,
 }: Props) {
   const [memoryOpen, setMemoryOpen] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const { messages, streaming, sendMessage, stopGenerating, clearConversation } = useChatStream({
     chatUrl: `/apps/${appId}/conversations`,
     buildBody: (query) => ({ query }),
@@ -64,7 +66,7 @@ export function DebugChatPanel({
         {messages.length > 0 && (
           <button
             type="button"
-            onClick={() => void clearConversation()}
+            onClick={() => setConfirmClear(true)}
             aria-label="清空调试对话"
             title="清空调试对话"
             className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -106,6 +108,18 @@ export function DebugChatPanel({
         }
       />
       <LongTermMemoryModal appId={appId} open={memoryOpen} onClose={() => setMemoryOpen(false)} />
+      <ConfirmDialog
+        open={confirmClear}
+        title="清空调试对话？"
+        description="将清空当前应用的调试对话记录，且不可恢复。"
+        confirmText="清空"
+        destructive
+        onConfirm={() => {
+          setConfirmClear(false);
+          void clearConversation();
+        }}
+        onCancel={() => setConfirmClear(false)}
+      />
     </>
   );
 }

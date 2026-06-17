@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 
 import { getApp, getPublishedConfig } from "@/api/apps";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { AppStatusBadge } from "@/features/apps/AppStatusBadge";
 import { ChatEmptyState } from "@/features/chat/ChatEmptyState";
 import { ChatPanel } from "@/features/chat/ChatPanel";
@@ -93,6 +95,7 @@ function PublishedChat({ appId, name, config }: { appId: number; name: string; c
     streaming,
     enabled: !!config.suggested_after_answer?.enable,
   });
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const header = (
     <header className="flex items-center justify-between gap-3 border-b px-4 py-3">
@@ -105,7 +108,7 @@ function PublishedChat({ appId, name, config }: { appId: number; name: string; c
       {messages.length > 0 && (
         <button
           type="button"
-          onClick={() => void clearConversation()}
+          onClick={() => setConfirmClear(true)}
           aria-label="清空对话"
           title="清空对话（保留长期记忆）"
           className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -117,32 +120,46 @@ function PublishedChat({ appId, name, config }: { appId: number; name: string; c
   );
 
   return (
-    <ChatPanel
-      className="mx-auto max-w-3xl"
-      messages={messages}
-      streaming={streaming}
-      onSend={sendMessage}
-      onStop={stopGenerating}
-      followups={followups}
-      onPickFollowup={(q) => void sendMessage(q)}
-      header={header}
-      emptyState={
-        <ChatEmptyState
-          openingStatement={config.opening_statement}
-          openingQuestions={config.opening_questions}
-          onPick={(q) => void sendMessage(q)}
-          fallback={
-            <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-sm text-muted-foreground">
-              <p>开始和「{name}」对话吧。</p>
-            </div>
-          }
-        />
-      }
-      footerNote={
-        <p className="pt-2 text-center text-[10px] tracking-wider text-muted-foreground/70">
-          回答由 AI 生成
-        </p>
-      }
-    />
+    <>
+      <ChatPanel
+        className="mx-auto max-w-3xl"
+        messages={messages}
+        streaming={streaming}
+        onSend={sendMessage}
+        onStop={stopGenerating}
+        followups={followups}
+        onPickFollowup={(q) => void sendMessage(q)}
+        header={header}
+        emptyState={
+          <ChatEmptyState
+            openingStatement={config.opening_statement}
+            openingQuestions={config.opening_questions}
+            onPick={(q) => void sendMessage(q)}
+            fallback={
+              <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center text-sm text-muted-foreground">
+                <p>开始和「{name}」对话吧。</p>
+              </div>
+            }
+          />
+        }
+        footerNote={
+          <p className="pt-2 text-center text-[10px] tracking-wider text-muted-foreground/70">
+            回答由 AI 生成
+          </p>
+        }
+      />
+      <ConfirmDialog
+        open={confirmClear}
+        title="清空对话？"
+        description="将清空当前对话记录（保留长期记忆），且不可恢复。"
+        confirmText="清空"
+        destructive
+        onConfirm={() => {
+          setConfirmClear(false);
+          void clearConversation();
+        }}
+        onCancel={() => setConfirmClear(false)}
+      />
+    </>
   );
 }
