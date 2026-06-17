@@ -47,7 +47,12 @@
 > 优先级从上到下递减；前端交互类优先。
 
 - [ ] 首页助手（`/code/linMing` 对应页 vs `frontend/src/features/home/assistant`）：流式渲染、
-      思考态、停止/重试、建议追问、附件上传交互、空态、滚动行为等交互细节。
+      思考态、停止/重试、建议追问、空态、滚动行为等交互细节。
+      （✓ 已对齐：**头部模型选择器**——见已完成记录 2026-06-18；自动滚动 hook 已核为忠实移植、无差异。）
+- [ ] **聊天附件上传/展示**（大特性，多轮）：参考 `message-composer`/`attachment-picker`/`message-bubble`
+      支持图片+文档的拖拽/粘贴/选择上传与气泡展示，后端配额/白名单已就绪（CHAT_* 配置），
+      但我们 `Composer` 仅纯文本。需拆：①上传 api+lib ②AttachmentPicker+预览 ③气泡附件渲染
+      ④useChatStream 传附件。受 `CHAT_ATTACHMENT_URL_PREFIXES` 域名白名单门控（默认空=拒绝）。
 - [ ] 应用编排（orchestrate）：模型参数面板、工具/知识库/工作流选择器的交互与校验、调试面板、
       发布流程提示、开场白/开场问题编辑体验。
 - [ ] 内置插件 / 自定义插件（API 工具）：插件列表、配置表单、参数校验与错误提示交互。
@@ -60,4 +65,8 @@
 
 > 格式：`YYYY-MM-DD HH:MM | 对齐点 | 改了什么 | 测试 | commit`
 
-（暂无——首轮循环触发后从这里开始追加。）
+- 2026-06-18 00:33 | **首页助手头部模型选择器** | 参考站 `_home/chat` 头部有 ModelPicker 让用户选助手用哪个模型，
+  我们没有；后端 `assistant_agent_schema` 早已支持可选 `provider`/`model`（按轮覆盖），纯前端缺口。新增持久化
+  `stores/ai-model-store.ts` + `home/assistant/ModelPicker.tsx`（原生 select+optgroup，过滤非 chat/弃用，
+  «默认模型»选项），`use-assistant-chat` 的 buildBody 读 store 在成对时附带 provider/model，AssistantChat 头部
+  渲染选择器。后端未改。 | 113 passed（+2）、typecheck+build 绿 | 见本次提交（feat: assistant model picker）
