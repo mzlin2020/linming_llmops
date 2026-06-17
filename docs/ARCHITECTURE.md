@@ -45,7 +45,7 @@ Flask 3.1，使用 **`injector` 依赖注入**：业务类多为 `@inject @datac
 
 - **`core/` 不感知认证**：归属（`user_id`）与恒假的 `is_admin` 作为普通参数传入。
 - **重 ML 懒加载**：torch / sentence-transformers 在属性与任务体内才导入，导入 core 或启动 web 进程不会拉起 ML。
-- `core/workflow` v1 仅提供库层（引擎），工作流的服务/处理器与可视化编辑器在 v1.1 暴露。
+- `core/workflow` 是供应商可配置的 DAG 引擎（8 类节点 + 严格/宽松双校验 + LangGraph 逐节点流式）。v1.1 已在其上接出 `workflow_service`/`workflow_handler`/`/workflows` 路由（CRUD + 草稿/发布双轨 + 调试 SSE），并把已发布工作流经 `chat_service._build_tools` 解析为 `WorkflowTool` 注入 agent，使其可在应用对话中被 LLM 调用。
 
 ### 支撑层
 
@@ -67,7 +67,7 @@ Vite + React 18 + TypeScript 单页应用。服务端状态用 **TanStack Query*
 - **HTTP（`lib/http/`）**：单 axios 实例，响应拦截器**解包 `{code,message,data}` 信封**，`get<T>`/`post<T>` 直接拿到 `data`；`401` 触发**单飞刷新队列**（并发失败只发一次 `/auth/refresh` 再重放，刷新失败则硬登出）；错误统一为 `ApiError`。
 - **SSE（`lib/sse/`）**：POST 无法用 `EventSource`，故 `streamSSE` 用 `fetch` POST + `ReadableStream`，注入 Bearer token；帧解析是**纯函数**（容忍分块/多帧/CRLF，做了字节级单测）；非 2xx 抛 `ApiError`，`AbortController` 取消静默吞掉。
 
-结构：路由集中在 `routes/router.tsx`，受 `<RequireAuth>` 保护；功能模块在 `src/features/<module>/`（首页助手、插件、知识库、应用编排、设置、工作流占位）；共享对话核心 `features/chat/use-chat-stream.ts` 是通用流式 hook，首页助手与应用调试面板共用。**请求体形状与后端校验器逐字一致**。
+结构：路由集中在 `routes/router.tsx`，受 `<RequireAuth>` 保护；功能模块在 `src/features/<module>/`（首页助手、插件、知识库、应用编排、设置、工作流）；共享对话核心 `features/chat/use-chat-stream.ts` 是通用流式 hook，首页助手与应用调试面板共用。工作流编辑器（`features/workflow/editor/`）用 **`@xyflow/react`** 画布 + zustand store（防抖自动保存草稿）+ 序列化（后端图 ↔ ReactFlow）+ 客户端图校验；调试运行复用 `lib/sse/streamSSE` 消费逐节点 `workflow` 帧。**请求体形状与后端校验器逐字一致**。
 
 ## 部署（`deploy/`）
 

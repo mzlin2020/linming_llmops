@@ -5,7 +5,7 @@
 
 > **An open-source, Docker‑one‑click‑deployable LLMOps platform** — app orchestration, streaming chat (SSE), a RAG knowledge base, built‑in & API tools, and an assistant agent. Self‑contained lightweight auth, OpenAI‑compatible by default, local embeddings out of the box. Bring up the whole stack with `docker compose up`.
 
-`linming_llmops` 是一个**开源、可 Docker 一键部署的 LLMOps 平台**：应用编排 + 流式对话（SSE）+ RAG 知识库 + 工具/插件 + 助手 Agent。内置轻量登录（无需外部网关），默认对接 OpenAI 兼容接口，知识库向量化走**本地嵌入模型**——干净主机上三条命令即可起完整栈、浏览器直接使用。
+`linming_llmops` 是一个**开源、可 Docker 一键部署的 LLMOps 平台**：应用编排 + 流式对话（SSE）+ RAG 知识库 + 工具/插件 + 助手 Agent + 可视化工作流。内置轻量登录（无需外部网关），默认对接 OpenAI 兼容接口，知识库向量化走**本地嵌入模型**——干净主机上三条命令即可起完整栈、浏览器直接使用。
 
 ---
 
@@ -16,11 +16,12 @@
 - **RAG 知识库** — 文档导入 → 自动切分 → 向量索引（Qdrant）→ 语义/混合检索与命中测试；向量化由**本地嵌入模型**完成，检索本身不需要付费 key。
 - **工具 / 插件** — 内置工具框架 + 自定义 API 工具（OpenAPI/HTTP），让 Agent 调用外部能力。
 - **助手 Agent** — 可绑定工具与知识库的对话式 Agent，支持多轮工具调用。
+- **可视化工作流** — 拖拽式编排多节点工作流（开始/结束/LLM/模板/工具/知识库检索/HTTP/代码 8 类节点），逐节点流式调试运行，发布后可作为工具被应用调用。
 - **LLM 目录与管理** — 多供应商/多渠道模型目录，渠道凭证落库加密、多渠道兜底熔断。
 - **OpenAPI 外部调用** — 以 API Key 鉴权的对外接口，供第三方系统集成。
 - **文件上传与管理** — 本地磁盘存储（S3/MinIO 适配器接口预留）。
 
-> **v1.1 延后**（已在路线图中规划，本版不含）：工作流可视化编辑器、图像生成、TTS。详见 [`docs/ROADMAP.md`](docs/ROADMAP.md)。
+> **v1.1 进行中**（已在路线图中规划）：图像生成、TTS。详见 [`docs/ROADMAP.md`](docs/ROADMAP.md)。
 
 ---
 
@@ -131,7 +132,7 @@ docs/       架构、路线图、供应商配置指南
 ## 🗺️ 路线图
 
 v1 已交付：基础设施 → 轻量登录 → 数据模型/迁移 → 核心 AI 引擎 → 服务/存储 → 前端 SPA → Docker 一键部署 → 开源发布。
-v1.1 计划：工作流可视化编辑器、图像生成、TTS。
+v1.1：可视化工作流编辑器**已交付**；图像生成、TTS 进行中。
 
 完整阶段表与状态见 [`docs/ROADMAP.md`](docs/ROADMAP.md)。
 
