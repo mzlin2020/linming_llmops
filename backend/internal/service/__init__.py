@@ -23,6 +23,7 @@ from .builtin_tool_service import BuiltinToolService
 from .stats_service import StatsService
 from .llm_admin_service import LlmAdminService
 from .openapi_service import OpenAPIService
+from .workflow_service import WorkflowService
 
 __all__ = [
     "AccountService",
@@ -53,4 +54,6 @@ __all__ = [
     "StatsService",
     "LlmAdminService",
     "OpenAPIService",
+    # 工作流（v1.1）
+    "WorkflowService",
 ]

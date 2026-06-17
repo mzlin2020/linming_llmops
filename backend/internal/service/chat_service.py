@@ -7,8 +7,8 @@
 落库时机：append_round（开一轮）→ SSE → finally finalize_round（回写 answer/latency/status）。
 SSE 协议：每帧 `event: <name>\\ndata: <JSON>\\n\\n`，不再有裸 data 或 [DONE]。
 
-注：工作流-as-工具（config.workflows）需 WorkflowService 暴露，随工作流 service/handler 一并落地（v1.1）；
-本期 config.workflows 仅存储、不装配（无法发布工作流故恒空），_build_tools 暂不处理该分支。
+注：工作流-as-工具（config.workflows）经 WorkflowService.get_langchain_tools_by_ids 实时解析
+（按 已发布 + 归属本人 过滤）后追加到 Agent 工具列表，与 config.tools / config.datasets 并列。
 """
 import uuid
 from dataclasses import dataclass
@@ -40,6 +40,7 @@ from internal.service.app_service import AppService
 from internal.service.conversation_service import HISTORY_TURNS_CAP, ConversationService
 from internal.service.quota_service import QuotaService
 from internal.service.retrieval_service import RetrievalService
+from internal.service.workflow_service import WorkflowService
 
 
 @inject
@@ -51,6 +52,7 @@ class ChatService:
     tool_resolver: ToolResolver
     retrieval_service: RetrievalService
     quota_service: QuotaService
+    workflow_service: WorkflowService
 
     # ---------- debug（编排预览，读草稿配置）----------
 
@@ -200,7 +202,8 @@ class ChatService:
 
         检索不计命中配额（与灌库/重索引不同，检索查询几乎不增内存）。归属由 retrieval_service 二次过滤兜底。
         config.datasets 落库时已由 AppConfigService._validate_datasets 规整为去重的自有库 int id 列表，此处直接信任。
-        config.workflows（工作流-as-工具）随工作流 service 落地（v1.1），本期不装配。"""
+        config.workflows（工作流-as-工具）经 WorkflowService 实时解析（已发布 + 归属本人）后追加；
+        config.workflows 落库时已由 AppConfigService._validate_workflows 规整为去重的自有已发布 int id 列表。"""
         if not self.llm_manager.supports_tool_call(provider, model_name):
             return []
         tools = self.tool_resolver.resolve(
@@ -212,6 +215,9 @@ class ChatService:
                 dataset_ids=dataset_ids, user_id=user.id,
                 source=RetrievalSource.APP.value, source_app_id=app.id,
             ))
+        workflow_ids = [w for w in (getattr(config, "workflows", None) or []) if isinstance(w, int)]
+        if workflow_ids:
+            tools.extend(self.workflow_service.get_langchain_tools_by_ids(workflow_ids, user))
         return tools
 
     def _prepare(
