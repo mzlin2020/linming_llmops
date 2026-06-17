@@ -26,3 +26,11 @@
   background: "#EDEEF0"
   category: search
   created_at: 1748390400
+- name: image_generation
+  label: 图像生成
+  description: 调用已配置的生图模型，按文字描述生成图片（返回图片链接）。
+  icon: icon.svg
+  background: "#EEF2FF"
+  category: tool
+  created_at: 1749340800
+  admin_only: false

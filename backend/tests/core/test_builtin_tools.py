@@ -1,8 +1,8 @@
 """内置工具框架：YAML 三件套加载 + 懒 dynamic_import 链端到端（不需安装 ddgs/wikipedia）。
 
 闸门要点：get_providers() 会对每个 provider 触发 dynamic_import 加载工具模块——工具模块顶层只依赖
-langchain_core+pydantic+helper（langchain_community 在工厂体内懒导入），故此加载链在不装可选工具依赖时也通；
-跳过的 gaode/image_generation 必须不在目录里（残留会让首次加载即 ModuleNotFoundError）。
+langchain_core+pydantic+helper（langchain_community 在工厂体内懒导入，image_generation 的 service/storage 也在
+_run 内懒导入），故此加载链在不装可选工具依赖时也通；跳过的 gaode 必须不在目录里（残留会让首次加载即 ModuleNotFoundError）。
 """
 import re
 
@@ -15,10 +15,21 @@ from internal.core.tools.builtin_tools.categories import BuiltinCategoryManager
 def test_provider_manager_loads_all_kept_providers():
     mgr = BuiltinProviderManager()
     names = {p.name for p in mgr.get_providers()}
-    assert names == {"google", "time", "duckduckgo", "wikipedia"}
+    assert names == {"google", "time", "duckduckgo", "wikipedia", "image_generation"}
     # 跳过项必须不存在
     assert mgr.get_provider("gaode") is None
-    assert mgr.get_provider("image_generation") is None
+
+
+def test_image_generation_provider_is_open_to_all():
+    # v1.1：图像生成对所有登录用户开放（无管理员概念），provider admin_only=False，
+    # 工具模块顶层只依赖 langchain_core+pydantic+helper（service/storage 在 _run 内懒导入），加载链不拉重依赖。
+    mgr = BuiltinProviderManager()
+    provider = mgr.get_provider("image_generation")
+    assert provider is not None
+    assert provider.provider_entity.admin_only is False
+    factory = provider.get_tool("text_to_image")
+    assert "prompt" in factory.args_schema.model_fields  # 免实例化即可读 args_schema
+    assert isinstance(factory(), BaseTool)
 
 
 def test_time_tool_instantiates_and_runs():

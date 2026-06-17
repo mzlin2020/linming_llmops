@@ -24,6 +24,7 @@ from .stats_service import StatsService
 from .llm_admin_service import LlmAdminService
 from .openapi_service import OpenAPIService
 from .workflow_service import WorkflowService
+from .image_generation_service import ImageGenerationService
 
 __all__ = [
     "AccountService",
@@ -56,4 +57,6 @@ __all__ = [
     "OpenAPIService",
     # 工作流（v1.1）
     "WorkflowService",
+    # 图像生成（v1.1）
+    "ImageGenerationService",
 ]

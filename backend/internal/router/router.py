@@ -15,6 +15,7 @@ from internal.handler import (
     ConversationHandler,
     DatasetHandler,
     DocumentHandler,
+    ImageGenerationHandler,
     LanguageModelHandler,
     LlmAdminHandler,
     OpenAPIHandler,
@@ -50,6 +51,8 @@ class Router:
     openapi_handler: OpenAPIHandler
     # 工作流（v1.1）
     workflow_handler: WorkflowHandler
+    # 图像生成（v1.1）
+    image_generation_handler: ImageGenerationHandler
 
     def register_router(self, app: Flask):
         bp = Blueprint("api", __name__, url_prefix="/api")
@@ -324,6 +327,16 @@ class Router:
                         view_func=self.workflow_handler.publish_workflow, methods=["POST"])
         bp.add_url_rule("/workflows/<int:workflow_id>/cancel-publish", endpoint="cancel_publish_workflow",
                         view_func=self.workflow_handler.cancel_publish_workflow, methods=["POST"])
+
+        # ---------- 图像生成（v1.1，需登录；/file/<name> 为能力 URL，无需登录，静态段先于通配）----------
+        bp.add_url_rule("/images",
+                        view_func=self.image_generation_handler.list_images, methods=["GET"])
+        bp.add_url_rule("/images/file/<string:name>", endpoint="serve_image_file",
+                        view_func=self.image_generation_handler.serve_image_file, methods=["GET"])
+        bp.add_url_rule("/images/text-to-image", endpoint="text_to_image",
+                        view_func=self.image_generation_handler.text_to_image, methods=["POST"])
+        bp.add_url_rule("/images/image-to-image", endpoint="image_to_image",
+                        view_func=self.image_generation_handler.image_to_image, methods=["POST"])
 
         app.register_blueprint(bp)
 

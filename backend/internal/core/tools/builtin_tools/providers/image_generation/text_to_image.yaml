@@ -1,0 +1,4 @@
+name: text_to_image
+label: 文生图
+description: 当用户要求画图 / 生成图片 / 出图时使用：根据文字描述生成一张图片，返回图片链接。
+params: []
