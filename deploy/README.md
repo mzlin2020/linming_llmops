@@ -89,4 +89,5 @@ docker compose -f deploy/docker-compose.yml --env-file deploy/.env down -v      
 ## 备注
 
 - S3/MinIO 存储后端为接口预留位（当前 `STORAGE_BACKEND=local`），随适配器实现接入。
-- 图像生成 / TTS / 工作流编辑器属 v1.1，本部署默认不启用。
+- 可视化工作流编辑器为 v1.1 已交付能力，本部署默认启用（无需额外开关）。
+- 图像生成 / TTS 属 v1.1 后续能力，本部署默认不启用。
