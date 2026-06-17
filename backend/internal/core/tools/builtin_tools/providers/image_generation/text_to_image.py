@@ -32,6 +32,7 @@ class TextToImageTool(BaseTool):
         from flask_login import current_user
 
         from internal.core.language_model import LanguageModelManager
+        from internal.exception import CustomException
         from internal.service.image_generation_service import ImageGenerationService
         from internal.service.quota_service import QuotaService
         from internal.storage import StorageService
@@ -45,7 +46,9 @@ class TextToImageTool(BaseTool):
         req = SimpleNamespace(prompt=prompt, provider=None, model=None, size=size, guidance_scale=None)
         try:
             result = service.text_to_image(current_user, req)
-        except Exception as e:  # noqa: BLE001 — Agent 工具任何异常都转成文字反馈，绝不让对话崩
+        except CustomException as e:  # service 已组装好友好信息（配额/未配置/上游失败），原样透传
+            return e.message
+        except Exception as e:  # noqa: BLE001 — 其它意外异常也转文字反馈，绝不让对话崩
             return f"图像生成失败：{str(e)[:160]}"
         url = result.get("url", "")
         return f"已生成图片：\n\n![{prompt[:50]}]({url})"

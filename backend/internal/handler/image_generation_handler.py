@@ -64,4 +64,11 @@ class ImageGenerationHandler:
         if result is None:
             return not_found_message("图片不存在")
         data, mime = result
-        return FlaskResponse(data, mimetype=mime, status=200)
+        # 文件名是内容寻址的不可猜 uuid，字节永不变 —— 画廊/对话里同一图会被反复 <img> 加载，
+        # 上长缓存避免每次渲染都回源读盘。
+        return FlaskResponse(
+            data,
+            mimetype=mime,
+            status=200,
+            headers={"Cache-Control": "public, max-age=31536000, immutable"},
+        )

@@ -124,7 +124,7 @@ class ImageGenerationService:
             provider=provider,
             model=model,
             prompt=prompt,
-            size=str(size or ""),
+            size=size or "",
             input_image_url=image or "",
             url=f"/api/images/file/{name}",
             mime_type=mime,
