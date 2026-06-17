@@ -165,5 +165,18 @@ export const DEFAULT_PROCESS_RULE: ProcessRule = {
   },
 };
 
+/**
+ * 自定义切分规则的前端校验（对齐参考 segment-settings-step，提交前拦非法值）。
+ * 返回错误文案；通过返回 null。automatic 模式用后端默认、无需校验。
+ */
+export function validateProcessRule(rule: ProcessRule): string | null {
+  const { chunk_size, chunk_overlap, separators } = rule.segment;
+  if (!Number.isFinite(chunk_size) || chunk_size < 1) return "分段最大长度需大于 0";
+  if (!Number.isFinite(chunk_overlap) || chunk_overlap < 0 || chunk_overlap >= chunk_size)
+    return "分段重叠长度需 ≥ 0 且小于分段最大长度";
+  if (separators.filter((s) => s !== "").length === 0) return "请至少保留一个分隔符";
+  return null;
+}
+
 /** 上传文件默认 accept（仅客户端提示；后端 UPLOAD_ALLOWED_EXTENSIONS 为准）。 */
 export const UPLOAD_ACCEPT_EXTENSIONS = ["txt", "md", "markdown", "pdf", "docx", "csv", "xlsx"];

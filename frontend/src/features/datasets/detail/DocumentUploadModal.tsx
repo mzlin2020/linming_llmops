@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/lib/http/errors";
 import {
   DEFAULT_PROCESS_RULE,
   UPLOAD_ACCEPT_EXTENSIONS,
+  validateProcessRule,
   type ProcessRule,
   type ProcessType,
 } from "@/types/datasets";
@@ -61,6 +62,8 @@ export function DocumentUploadModal({ open, datasetId, onClose, onUploaded }: Pr
     .filter((it) => it.status === "done" && it.uploadFileId)
     .map((it) => it.uploadFileId!);
   const uploading = items.some((it) => it.status === "uploading");
+  // 自定义切分规则的前端校验（automatic 用后端默认，免校验）。
+  const ruleError = processType === "custom" ? validateProcessRule(rule) : null;
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -122,6 +125,7 @@ export function DocumentUploadModal({ open, datasetId, onClose, onUploaded }: Pr
           onRuleChange={setRule}
         />
 
+        {ruleError && <p className="text-sm text-destructive">{ruleError}</p>}
         {createMutation.isError && <FormError error={createMutation.error} />}
 
         <div className="flex justify-end gap-2 pt-1">
@@ -130,7 +134,9 @@ export function DocumentUploadModal({ open, datasetId, onClose, onUploaded }: Pr
           </Button>
           <Button
             onClick={() => createMutation.mutate()}
-            disabled={readyIds.length === 0 || uploading || createMutation.isPending}
+            disabled={
+              readyIds.length === 0 || uploading || createMutation.isPending || !!ruleError
+            }
           >
             创建{readyIds.length > 0 ? ` (${readyIds.length})` : ""}
           </Button>

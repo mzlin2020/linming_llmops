@@ -61,7 +61,8 @@
 - [x] 内置插件 / 自定义插件（API 工具）：已核为**已对齐**——自定义插件编辑器已有请求头 + OpenAPI 校验，
       且多了「校验后本地解析工具预览」（比参考更全）；内置工具分类 chips + 卡片展开同构。无缺口。
 - [ ] 知识库：上传、分段预览、检索测试 UI 的交互。
-      （✓ 已对齐：**查询历史独立视图/tab**，见已完成记录 2026-06-18；命中测试视图本就有「最近查询」侧栏。）
+      （✓ 已对齐：**查询历史独立视图/tab**、**自定义分段规则前端校验**，见已完成记录 2026-06-18；
+      命中测试侧栏本就有；ProcessRuleForm 其余控件已同构；参考无「分段预览」。）
 - [ ] 设置 / 模型目录管理：表单与列表交互。
 - [ ] 工作流可视化编辑器（参考站有，本项目目前是 placeholder，属 v1.1/Phase 8）：**大特性，
       拆最小增量推进或暂缓**；动前在台账写清增量边界。
@@ -95,3 +96,8 @@
   为同款(便签图标+「今天想聊点什么？」+4 卡片随机取词，genericize 去「华语」)。同步改 AssistantChat.test
   两处旧文案断言(改 data-testid 取卡片实际文本、标题断言)。先核应用商店/store-app-card 已同构、不做。后端未改。
   | 120 passed、typecheck+build 绿 | 见本次提交（feat: assistant empty-state starter cards）
+- 2026-06-18 05:28 | **知识库自定义分段规则前端校验** | 参考 `segment-settings-step` 提交前校验
+  chunk_size>0 / overlap<chunk_size / 至少一个分隔符；我们 DocumentUploadModal 提交自定义规则前不校验、
+  非法值直接打到后端。新增纯函数 `types/datasets.validateProcessRule`，modal 中 custom 模式算 ruleError →
+  禁用「创建」+ 内联红字提示。先核 ChatEmptyState/ThinkingIndicator 为忠实移植无差异、ProcessRuleForm 控件同构。
+  后端未改。 | 124 passed（+4，含校验器单测）、typecheck+build 绿 | 见本次提交（feat: segment-rule validation）
