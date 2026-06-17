@@ -22,6 +22,7 @@ from internal.handler import (
     SegmentHandler,
     StatsHandler,
     UploadFileHandler,
+    WorkflowHandler,
 )
 
 
@@ -47,6 +48,8 @@ class Router:
     api_tool_handler: ApiToolHandler
     llm_admin_handler: LlmAdminHandler
     openapi_handler: OpenAPIHandler
+    # 工作流（v1.1）
+    workflow_handler: WorkflowHandler
 
     def register_router(self, app: Flask):
         bp = Blueprint("api", __name__, url_prefix="/api")
@@ -299,6 +302,28 @@ class Router:
                         view_func=self.llm_admin_handler.delete_channel, methods=["POST"])
         bp.add_url_rule("/admin/llm-channels/<int:channel_id>/recover",
                         view_func=self.llm_admin_handler.recover_channel, methods=["POST"])
+
+        # ---------- 工作流编排（需登录，user_id 隔离；调试端点为 SSE）----------
+        bp.add_url_rule("/workflows",
+                        view_func=self.workflow_handler.get_workflows_with_page, methods=["GET"])
+        bp.add_url_rule("/workflows", endpoint="create_workflow",
+                        view_func=self.workflow_handler.create_workflow, methods=["POST"])
+        bp.add_url_rule("/workflows/<int:workflow_id>",
+                        view_func=self.workflow_handler.get_workflow, methods=["GET"])
+        bp.add_url_rule("/workflows/<int:workflow_id>", endpoint="update_workflow",
+                        view_func=self.workflow_handler.update_workflow, methods=["POST"])
+        bp.add_url_rule("/workflows/<int:workflow_id>/delete",
+                        view_func=self.workflow_handler.delete_workflow, methods=["POST"])
+        bp.add_url_rule("/workflows/<int:workflow_id>/draft-graph",
+                        view_func=self.workflow_handler.get_draft_graph, methods=["GET"])
+        bp.add_url_rule("/workflows/<int:workflow_id>/draft-graph", endpoint="update_workflow_draft_graph",
+                        view_func=self.workflow_handler.update_draft_graph, methods=["POST"])
+        bp.add_url_rule("/workflows/<int:workflow_id>/debug",
+                        view_func=self.workflow_handler.debug_workflow, methods=["POST"])
+        bp.add_url_rule("/workflows/<int:workflow_id>/publish", endpoint="publish_workflow",
+                        view_func=self.workflow_handler.publish_workflow, methods=["POST"])
+        bp.add_url_rule("/workflows/<int:workflow_id>/cancel-publish", endpoint="cancel_publish_workflow",
+                        view_func=self.workflow_handler.cancel_publish_workflow, methods=["POST"])
 
         app.register_blueprint(bp)
 

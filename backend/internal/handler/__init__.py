@@ -16,6 +16,7 @@ from .stats_handler import StatsHandler
 from .api_tool_handler import ApiToolHandler
 from .llm_admin_handler import LlmAdminHandler
 from .openapi_handler import OpenAPIHandler
+from .workflow_handler import WorkflowHandler
 
 __all__ = [
     "PingHandler",
@@ -38,4 +39,6 @@ __all__ = [
     "ApiToolHandler",
     "LlmAdminHandler",
     "OpenAPIHandler",
+    # 工作流（v1.1）
+    "WorkflowHandler",
 ]
