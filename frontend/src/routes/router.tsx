@@ -14,6 +14,7 @@ import { DatasetDetailLayout } from "@/features/datasets/detail/DatasetDetailLay
 import { DatasetSettingsView } from "@/features/datasets/detail/DatasetSettingsView";
 import { DocumentsView } from "@/features/datasets/detail/DocumentsView";
 import { HitTestingView } from "@/features/datasets/detail/HitTestingView";
+import { QueriesView } from "@/features/datasets/detail/QueriesView";
 import { SegmentsView } from "@/features/datasets/segments/SegmentsView";
 import { HomePage } from "@/features/home/HomePage";
 import { ImageGenerationPage } from "@/features/images/ImageGenerationPage";
@@ -78,6 +79,7 @@ export const router = createBrowserRouter([
               { index: true, element: <Navigate to="documents" replace /> },
               { path: "documents", element: <DocumentsView /> },
               { path: "hit-testing", element: <HitTestingView /> },
+              { path: "queries", element: <QueriesView /> },
               { path: "settings", element: <DatasetSettingsView /> },
             ],
           },

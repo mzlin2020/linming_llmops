@@ -58,6 +58,7 @@
       （✓ 已对齐：**回答后建议追问 chips**（debug+published），见已完成记录 2026-06-18。）
 - [ ] 内置插件 / 自定义插件（API 工具）：插件列表、配置表单、参数校验与错误提示交互。
 - [ ] 知识库：上传、分段预览、检索测试 UI 的交互。
+      （✓ 已对齐：**查询历史独立视图/tab**，见已完成记录 2026-06-18；命中测试视图本就有「最近查询」侧栏。）
 - [ ] 设置 / 模型目录管理：表单与列表交互。
 - [ ] 工作流可视化编辑器（参考站有，本项目目前是 placeholder，属 v1.1/Phase 8）：**大特性，
       拆最小增量推进或暂缓**；动前在台账写清增量边界。
@@ -77,3 +78,8 @@
   history 回填 id；新增 `use-followups.ts`（仅对本轮实时回答 key=`a-` 取、流式/未开启隐藏、同条只取一次）；
   `ChatPanel` 加 followups/onPickFollowup（输入框上方 chips）；接入 DebugChatPanel（草稿 suggested_after_answer）
   与 PublishedChat（已发布配置）。后端未改。 | 117 passed（+4）、typecheck+build 绿 | 见本次提交（feat: follow-up chips）
+- 2026-06-18 02:29 | **知识库「查询历史」视图** | 参考站知识库详情有独立「查询历史」tab（来源徽标 命中测试/应用对话
+  + 时间）；我们后端 `GET /datasets/<id>/queries` + 前端 `api/datasets.listDatasetQueries` + `DatasetQuery` 类型
+  全已就绪，仅被命中测试侧栏简单用了（只显示文本），无独立视图。新增 `datasets/detail/QueriesView.tsx`（列表：
+  query+来源徽标+MM-DD HH:mm 时间、空态引导去命中测试），DatasetDetailLayout 加「查询历史」nav，router 加
+  `:id/queries` 路由。后端未改。 | 119 passed（+2）、typecheck+build 绿 | 见本次提交（feat: dataset queries view）

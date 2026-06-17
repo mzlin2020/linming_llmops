@@ -6,7 +6,7 @@ import { getDataset } from "@/api/datasets";
 import { ModuleLayout } from "@/app-shell/ModuleLayout";
 import { SidebarNav, type SidebarItem } from "@/components/shared/SidebarNav";
 
-/** 知识库详情外壳：库名页头 + 子导航(文档/命中测试/设置) + Outlet。 */
+/** 知识库详情外壳：库名页头 + 子导航(文档/命中测试/查询历史/设置) + Outlet。 */
 export function DatasetDetailLayout() {
   const { id } = useParams();
   const datasetId = Number(id);
@@ -20,6 +20,7 @@ export function DatasetDetailLayout() {
   const nav: SidebarItem[] = [
     { to: `/datasets/${datasetId}/documents`, label: "文档" },
     { to: `/datasets/${datasetId}/hit-testing`, label: "命中测试" },
+    { to: `/datasets/${datasetId}/queries`, label: "查询历史" },
     { to: `/datasets/${datasetId}/settings`, label: "设置" },
   ];
 
