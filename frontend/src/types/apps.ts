@@ -57,6 +57,8 @@ export interface AppDetail extends AppListItem {
 export interface AppCreate {
   name: string;
   description?: string;
+  /** 创建时即设初始人设/系统提示词（可选；后续在编排页细调）。 */
+  preset_prompt?: string;
 }
 
 /** 公共应用商店列表项（GET /app-store 单项）。 */

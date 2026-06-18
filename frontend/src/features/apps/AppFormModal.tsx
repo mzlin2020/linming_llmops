@@ -11,15 +11,16 @@ import { Modal } from "@/components/shared/Modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { APP_DESCRIPTION_MAX, APP_NAME_MAX } from "@/types/apps";
+import { APP_DESCRIPTION_MAX, APP_NAME_MAX, PRESET_PROMPT_MAX } from "@/types/apps";
 
 const schema = z.object({
   name: z.string().min(1, "请输入名称").max(APP_NAME_MAX, `名称最多 ${APP_NAME_MAX} 字`),
   description: z.string().max(APP_DESCRIPTION_MAX, `描述最多 ${APP_DESCRIPTION_MAX} 字`),
+  preset_prompt: z.string().max(PRESET_PROMPT_MAX, `提示词最多 ${PRESET_PROMPT_MAX} 字`),
 });
 type FormValues = z.infer<typeof schema>;
 
-const EMPTY: FormValues = { name: "", description: "" };
+const EMPTY: FormValues = { name: "", description: "", preset_prompt: "" };
 
 interface Props {
   open: boolean;
@@ -43,7 +44,8 @@ export function AppFormModal({ open, onClose }: Props) {
   }, [open, reset]);
 
   const mutation = useMutation({
-    mutationFn: (values: FormValues) => createApp(values),
+    mutationFn: (values: FormValues) =>
+      createApp({ ...values, preset_prompt: values.preset_prompt.trim() || undefined }),
     onSuccess: (app) => {
       queryClient.invalidateQueries({ queryKey: ["apps"] });
       onClose();
@@ -59,6 +61,14 @@ export function AppFormModal({ open, onClose }: Props) {
         </FormRow>
         <FormRow label="描述（可选）" htmlFor="app-desc" error={errors.description?.message}>
           <Textarea id="app-desc" rows={3} {...register("description")} placeholder="这个应用是做什么的…" />
+        </FormRow>
+        <FormRow label="人设 / 提示词（可选）" htmlFor="app-preset" error={errors.preset_prompt?.message}>
+          <Textarea
+            id="app-preset"
+            rows={4}
+            {...register("preset_prompt")}
+            placeholder="你是一个……（可稍后在编排页再细调）"
+          />
         </FormRow>
 
         {mutation.isError && <FormError error={mutation.error} />}

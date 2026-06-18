@@ -117,3 +117,8 @@
   `ConfirmDialog` 接到 DebugChatPanel + PublishedChat 的清空按钮（destructive，确认后才调清空端点）。首页助手
   清空照参考用 title 提示、不弹框（保持一致）。**本轮另核实并记录附件增量2 被后端/部署/安全阻塞（见 backlog）。**
   后端未改。 | 129 passed（+1 确认门控测试）、typecheck+build 绿 | 见本次提交（feat: confirm before clearing chat）
+- 2026-06-18 08:26 | **新建应用表单补「人设/提示词」字段** | 参考 `app-create-dialog` 创建表单有 图标上传/
+  名称/描述/**人设提示词** 四项，我们 `AppFormModal` 只有 名称/描述。后端 `CreateAppReq` 早已收 `preset_prompt`
+  (≤8000)。`AppCreate` 类型加 `preset_prompt?`，表单加可选「人设/提示词」Textarea，空则传 undefined。图标上传依赖
+  公网 URL（同附件阻塞，跳过）。后端未改。 | 131 passed（+2，新增 AppFormModal 测试）、typecheck+build 绿
+  | 见本次提交（feat: preset prompt on app create）
