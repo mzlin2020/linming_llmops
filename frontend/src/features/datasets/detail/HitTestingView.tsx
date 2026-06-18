@@ -109,6 +109,10 @@ export function HitTestingView() {
           </Button>
         </div>
 
+        <p className="text-xs text-muted-foreground">
+          首次检索需加载向量模型，可能稍慢；之后会很快。
+        </p>
+
         {hitMutation.isError && <FormError error={hitMutation.error} />}
 
         {hitMutation.isSuccess && results.length === 0 && (

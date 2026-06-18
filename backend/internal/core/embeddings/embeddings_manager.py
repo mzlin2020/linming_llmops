@@ -16,6 +16,7 @@ HuggingFaceEmbeddings（底层 sentence-transformers）加载。
 """
 from __future__ import annotations
 
+import logging
 import os
 from functools import lru_cache
 from typing import Any, Optional
@@ -56,6 +57,22 @@ def _get_embeddings_singleton() -> Any:
         encode_kwargs=encode_kwargs,
         query_encode_kwargs=query_encode_kwargs,
     )
+
+
+def warmup_embeddings() -> bool:
+    """启动期预热：提前加载嵌入模型权重并跑一次 embed_query，把冷加载从「首次检索请求」前移到进程启动。
+
+    服务进程（gunicorn worker / celery worker）启动钩子里调用，避免用户第一次命中测试时才现场加载模型。
+    幂等（底层 @lru_cache 单例），失败只记日志、不抛——保持现有懒加载兜底，绝不影响进程启动。
+    返回是否预热成功（仅供日志/测试观察）。
+    """
+    try:
+        _get_embeddings_singleton().embed_query("warmup")
+        logging.info("[embeddings] 预热完成：%s", _env("EMBEDDING_MODEL", "BAAI/bge-small-zh-v1.5"))
+        return True
+    except Exception:
+        logging.exception("[embeddings] 预热失败（将退化为首次请求时懒加载）")
+        return False
 
 
 @lru_cache(maxsize=1)

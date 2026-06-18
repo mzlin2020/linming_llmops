@@ -24,6 +24,7 @@ else
   else
     echo "[entrypoint] Starting gunicorn ..."
     exec gunicorn \
+      --config docker/gunicorn.conf.py \
       --bind "${SERVER_BIND_HOST:-0.0.0.0}:${PORT:-5001}" \
       --workers "${SERVER_WORKER_AMOUNT:-2}" \
       --worker-class "${SERVER_WORKER_CLASS:-gthread}" \
