@@ -55,7 +55,7 @@ export function DatasetsListView() {
   const list = query.data?.list ?? [];
 
   return (
-    <div className="space-y-4">
+    <div className="h-full space-y-4 overflow-auto p-6">
       <div className="flex items-center justify-between gap-3">
         <SearchInput value={search} onChange={onSearch} placeholder="搜索知识库" />
         <Button onClick={openCreate}>
