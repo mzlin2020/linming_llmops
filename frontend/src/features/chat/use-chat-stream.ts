@@ -5,9 +5,11 @@ import type { SseFrame } from "@/lib/sse/parse-frames";
 import { streamSSE } from "@/lib/sse/stream-sse";
 
 import {
+  type AgentActionData,
   type AgentEndData,
   type ChatMessage,
   type ErrorData,
+  extractImageUrls,
   initialState,
   isStreaming,
   type MessageDeltaData,
@@ -93,6 +95,13 @@ export function useChatStream(options: ChatStreamOptions) {
             case "message":
               dispatch({ type: "APPEND_DELTA", delta: (frame.data as MessageDeltaData).delta });
               break;
+            case "agent_action": {
+              // 工具执行结果：文生图/图生图工具把图片放在 observation 的 markdown 里，
+              // 但模型最终答案不一定复述它，故在此抽出图片直接挂到助手气泡渲染。
+              const urls = extractImageUrls((frame.data as AgentActionData)?.observation ?? "");
+              if (urls.length) dispatch({ type: "ADD_GENERATED_IMAGES", urls });
+              break;
+            }
             case "agent_end":
               dispatch({
                 type: "FINISH_ASSISTANT",
@@ -112,7 +121,8 @@ export function useChatStream(options: ChatStreamOptions) {
             case "timeout":
               dispatch({ type: "ERROR_ASSISTANT", message: "回答超时了，稍后再试试 🙏" });
               break;
-            // agent_thought / agent_action / workflow：v1 安全忽略（工具步骤可视化后置）
+            // agent_thought / workflow：v1 安全忽略（工具步骤可视化后置）；
+            // agent_action 仅用于抽取生成图片（见上），其余工具文本输出仍不展示。
           }
         },
       });

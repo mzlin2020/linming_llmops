@@ -61,6 +61,27 @@ function UserAttachments({ message }: { message: ChatMessage }) {
   );
 }
 
+/** 助手气泡下方：工具（文生图/图生图）产出的图片缩略图（点击新开原图）。
+ * 过滤掉已出现在正文 markdown 里的 URL，避免模型复述时与正文图重复渲染。 */
+function GeneratedImages({ message }: { message: ChatMessage }) {
+  const urls = (message.generatedImages ?? []).filter((u) => !message.content.includes(u));
+  if (urls.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {urls.map((url) => (
+        <a key={url} href={url} target="_blank" rel="noreferrer">
+          <img
+            src={url}
+            alt="生成图片"
+            loading="lazy"
+            className="max-h-64 max-w-full rounded-xl border border-border/60 object-contain"
+          />
+        </a>
+      ))}
+    </div>
+  );
+}
+
 // memo：流式期间只有末条消息引用在变，历史消息不必随每个 delta 重渲（Markdown 解析不便宜）。
 export const MessageItem = memo(function MessageItem({ message }: { message: ChatMessage }) {
   if (message.role === "user") {
@@ -90,6 +111,7 @@ export const MessageItem = memo(function MessageItem({ message }: { message: Cha
             <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{message.content}</ReactMarkdown>
           </div>
         )}
+        <GeneratedImages message={message} />
       </div>
     </div>
   );

@@ -28,6 +28,9 @@ export interface ChatMessage {
   imageUrls?: string[];
   /** 本轮文档附件元数据（仅 user 气泡：文件 chip 渲染）。 */
   fileInfos?: ChatFileInfo[];
+  /** 工具（文生图/图生图）在本轮 agent_action 里产出的图片 URL（仅 assistant 气泡）。
+   * 这些图片只在 observation 里，不一定被模型复述进最终答案，故单独挂出来渲染。 */
+  generatedImages?: string[];
 }
 
 /** 消息分页出参的一轮（对齐后端 MessageItem，仅取本期所需字段）。 */
@@ -63,9 +66,32 @@ export interface AgentEndData {
   status: "normal" | "stop" | "error";
 }
 
+export interface AgentActionData {
+  conversation_id: number;
+  message_id: number;
+  position: number;
+  tool: string;
+  /** 工具执行结果（文生图工具返回 markdown 图片字符串）。 */
+  observation: string;
+}
+
 export interface ErrorData {
   message: string;
   message_id?: number;
+}
+
+/** 从工具 observation 文本里抽取 markdown 图片语法 `![alt](url)` 的 URL（纯函数，便于单测）。
+ * 仅匹配带感叹号的图片语法，普通链接 `[text](url)` 与纯文本都不会被抽取，
+ * 因此只有文生图/图生图这类返回图片 markdown 的工具会贡献结果，不会把别的工具的文本输出倒进对话。 */
+const IMAGE_MD_RE = /!\[[^\]]*\]\(([^)\s]+)\)/g;
+
+export function extractImageUrls(observation: string): string[] {
+  if (!observation) return [];
+  const out: string[] = [];
+  for (const m of observation.matchAll(IMAGE_MD_RE)) {
+    if (m[1]) out.push(m[1]);
+  }
+  return out;
 }
 
 export interface ChatState {
@@ -78,6 +104,7 @@ export type Action =
   | { type: "INIT"; messages: ChatMessage[] }
   | { type: "PUSH_PAIR"; user: ChatMessage; assistant: ChatMessage }
   | { type: "APPEND_DELTA"; delta: string }
+  | { type: "ADD_GENERATED_IMAGES"; urls: string[] }
   | { type: "FINISH_ASSISTANT"; status?: ChatMessage["status"]; messageId?: number }
   | { type: "ERROR_ASSISTANT"; message: string }
   | { type: "STOP_ASSISTANT" }
@@ -131,6 +158,12 @@ export function reducer(state: ChatState, action: Action): ChatState {
         ...last,
         content: last.content + action.delta,
         status: "streaming",
+      }));
+    case "ADD_GENERATED_IMAGES":
+      return patchStreamingAssistant(state, (last) => ({
+        ...last,
+        // 去重并集：agent_action 可能多次到达，避免重复图片
+        generatedImages: [...new Set([...(last.generatedImages ?? []), ...action.urls])],
       }));
     case "FINISH_ASSISTANT":
       return patchStreamingAssistant(state, (last) => ({

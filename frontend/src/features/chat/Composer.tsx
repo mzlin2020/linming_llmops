@@ -60,7 +60,7 @@ export function Composer({ streaming, onSend, onStop }: Props) {
         rows={1}
         placeholder="输入消息，Enter 发送，Shift+Enter 换行"
         aria-label="消息输入"
-        className="max-h-40 min-h-[32px] flex-1 resize-none overflow-hidden border-0 bg-transparent px-0.5 py-1 text-base leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none md:text-sm"
+        className="max-h-40 min-h-[32px] flex-1 resize-none overflow-hidden border-0 bg-transparent px-0.5 py-1 text-base leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none md:text-sm"
       />
       {streaming ? (
         <button
