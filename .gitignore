@@ -35,3 +35,4 @@ dist/
 # ---- 本地专用文档（含内部移植笔记，不进开源公开历史）----
 CLAUDE.md
 docs/开发指南.md
+docs/alignment-loop-log.md
