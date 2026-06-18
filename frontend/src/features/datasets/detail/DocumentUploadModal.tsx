@@ -138,6 +138,7 @@ export function DocumentUploadModal({ open, datasetId, onClose, onUploaded }: Pr
               readyIds.length === 0 || uploading || createMutation.isPending || !!ruleError
             }
           >
+            {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             创建{readyIds.length > 0 ? ` (${readyIds.length})` : ""}
           </Button>
         </div>

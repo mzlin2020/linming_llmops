@@ -47,7 +47,7 @@ export function SegmentsView() {
   const list = query.data?.list ?? [];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
+    <div className="mx-auto h-full max-w-4xl space-y-4 overflow-auto p-6">
       <div className="flex items-center justify-between gap-3">
         <nav className="flex items-center gap-1 text-sm text-muted-foreground">
           <Link to="/datasets" className="hover:text-foreground">

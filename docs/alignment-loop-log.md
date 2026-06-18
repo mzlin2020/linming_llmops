@@ -122,3 +122,22 @@
   (≤8000)。`AppCreate` 类型加 `preset_prompt?`，表单加可选「人设/提示词」Textarea，空则传 undefined。图标上传依赖
   公网 URL（同附件阻塞，跳过）。后端未改。 | 131 passed（+2，新增 AppFormModal 测试）、typecheck+build 绿
   | 见本次提交（feat: preset prompt on app create）
+- 2026-06-18 15:15 | **内置工具 key 接线缺口（线上测试发现，非对齐轮次）** | `google_serper` 谷歌搜索"暂不可用"
+  根因：工具靠 `SERPER_API_KEY` 取 key（langchain `GoogleSerperAPIWrapper` 默认读它），而项目从未接线——
+  `deploy/.env` 没填、`.env.example` 也无文档。compose 后端用 `env_file: .env` 注入全份 .env，故只需把 key 写进
+  `deploy/.env` 即生效（无需逐个 environment 映射）。修法：真实 key 借自源项目填进 `deploy/.env`（已 gitignore），
+  模板 `deploy/.env.example` 加「内置工具凭证」段留空 + 注释。未移植 gaode，故不引入 GAODE_API_KEY。详见记忆
+  builtin-tool-key-wiring。 | 改 .env/.env.example，无测试 | 仅本机（重建 backend 容器后生效）
+- 2026-06-18 15:20 | **知识库三处 UX 缺陷（线上测试发现）** | 1) 文档切片/灌库进行中无 loading：StatusBadge
+  非终态（排队/解析/切分/索引）补 `Loader2 animate-spin` 转圈、DocumentUploadModal「创建」按钮 pending 时带转圈、
+  DocumentsView 重新索引按钮按行 pending 转圈；2) 片段页无法滚动：`SegmentsView` 路由直挂 AppShell（`<main overflow-hidden>`）
+  而非走 ModuleLayout 的 overflow-auto，根 div 补 `h-full overflow-auto p-6`（照搬 b581586 既定模式）；3) 命中测试
+  「检索」按钮 pending 时无反馈→似卡死，改为转圈 + 「检索中…」。后端未改（hit 路径核对正常，纯前端反馈/布局）。
+  | 145 passed、typecheck+build 绿 | 见本次提交（fix: dataset KB loading & scroll UX）
+- 2026-06-18 15:35 | **命中测试「无法使用」实测复盘 + 空态文案补回（忠实移植漏项）** | 用户质疑「确定能用？」，
+  遂用其浏览器 token 实打部署服务器 API 真跑：`POST /datasets/6/hit` 语义检索把「RAG」段以
+  score 0.6165 正确排首，0.06–1.76s——**功能完全正常**。真因是体验坑：前端默认 `score=0.5`（**与参考站
+  hit-test-tab 一致，忠实，不改**）偏严，切题 query 多只回 1 条、不沾边的（如「介绍一下你自己」）0 命中→被误当
+  「坏了」。复核发现我们的空态文案被简化成「没有命中结果。」，**漏了参考站那句关键提示**
+  「没有命中任何片段，试试换个说法或降低相关度阈值」——按忠实移植补回。教训：声称「能用」前必须实测，不能只读代码。
+  | 145 passed、typecheck+build 绿 | 见本次提交（fix: hit-test empty-state hint） 

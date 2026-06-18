@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Loader2, Search } from "lucide-react";
 
 import { hitDataset, listDatasetQueries } from "@/api/datasets";
 import { FormError } from "@/components/shared/form";
@@ -100,14 +100,21 @@ export function HitTestingView() {
             />
           </label>
           <Button onClick={submit} disabled={!query.trim() || hitMutation.isPending}>
-            <Search className="h-4 w-4" /> 检索
+            {hitMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Search className="h-4 w-4" />
+            )}
+            {hitMutation.isPending ? "检索中…" : "检索"}
           </Button>
         </div>
 
         {hitMutation.isError && <FormError error={hitMutation.error} />}
 
         {hitMutation.isSuccess && results.length === 0 && (
-          <p className="py-8 text-center text-sm text-muted-foreground">没有命中结果。</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            没有命中任何片段，试试换个说法或降低相关度阈值
+          </p>
         )}
 
         <div className="space-y-3">

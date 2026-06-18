@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
-import { Pencil, RefreshCw, Trash2, Upload } from "lucide-react";
+import { Loader2, Pencil, RefreshCw, Trash2, Upload } from "lucide-react";
 
 import {
   deleteDocument,
@@ -155,7 +155,11 @@ export function DocumentsView() {
                   aria-label={`重新索引 ${doc.name}`}
                   title="重新索引"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  {reindexMutation.isPending && reindexMutation.variables === doc.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
                 </Button>
               )}
               <Button
