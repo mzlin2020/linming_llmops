@@ -14,6 +14,7 @@ import {
 import { create } from "zustand";
 
 import { saveDraftGraph } from "@/api/workflows";
+import { uuid } from "@/lib/utils";
 import type { NodeType, Workflow, WorkflowDebugFrame, WorkflowNode } from "@/types/workflows";
 import { layeredLayout } from "./auto-layout";
 import { NODE_DEFS } from "./node-registry";
@@ -58,10 +59,6 @@ interface EditorState {
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
-
-function uuid(): string {
-  return crypto.randomUUID();
-}
 
 /** 在已有标题里取不冲突的自动名：base → base 2 → base 3 … */
 function autoTitle(base: string, nodes: WfFlowNode[]): string {
