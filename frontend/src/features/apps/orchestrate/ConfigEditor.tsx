@@ -177,52 +177,45 @@ function ModelSelect({
     .filter((p) => p.models.length > 0);
   const current = providers.find((p) => p.name === value.provider);
   const knownModel = !!current?.models.some((m) => m.model_name === value.model);
+  // 对齐参考平台：单个选择框按 provider 分组（optgroup）一次性选定「提供商 + 模型」，
+  // 选项值用 provider::model 编码，回调时拆开写回 model_config。
+  const selected = `${value.provider}${MODEL_SEP}${value.model}`;
 
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <select
-        aria-label="模型提供商"
-        className={SELECT_CLS}
-        value={value.provider}
-        onChange={(e) => {
-          const provider = providers.find((p) => p.name === e.target.value);
-          const firstModel = provider?.models[0]?.model_name ?? "";
-          onChange({ ...value, provider: e.target.value, model: firstModel });
-        }}
-      >
-        {/* 当前值不在目录里（如默认回落值）时仍保留为可见选项 */}
-        <FallbackOption show={!current} value={value.provider} />
-        {providers.map((p) => (
-          <option key={p.name} value={p.name}>
-            {pickLabel(p.label, p.name)}
-          </option>
-        ))}
-      </select>
-      <select
-        aria-label="模型"
-        className={SELECT_CLS}
-        value={value.model}
-        onChange={(e) => onChange({ ...value, model: e.target.value })}
-      >
-        <FallbackOption show={!knownModel} value={value.model} />
-        {(current?.models ?? []).map((m) => (
-          <option key={m.model_name} value={m.model_name}>
-            {pickLabel(m.label, m.model_name)}
-          </option>
-        ))}
-      </select>
-    </div>
+    <select
+      aria-label="模型"
+      className={`${SELECT_CLS} w-full`}
+      value={selected}
+      onChange={(e) => {
+        const [provider, model] = e.target.value.split(MODEL_SEP);
+        onChange({ ...value, provider: provider ?? "", model: model ?? "" });
+      }}
+    >
+      {/* 当前 provider/model 不在目录里（如默认回落值）时仍保留为可见兜底项 */}
+      {!(current && knownModel) && value.model ? (
+        <option value={selected}>{`${value.provider} / ${value.model}`}</option>
+      ) : null}
+      {providers.map((p) => (
+        <optgroup key={p.name} label={pickLabel(p.label, p.name)}>
+          {p.models.map((m) => (
+            <option
+              key={`${p.name}${MODEL_SEP}${m.model_name}`}
+              value={`${p.name}${MODEL_SEP}${m.model_name}`}
+            >
+              {pickLabel(m.label, m.model_name)}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
   );
 }
 
+// provider 与 model 不含此分隔符，用于把二者编码进单个 <select> 的选项值
+const MODEL_SEP = "::";
+
 const SELECT_CLS =
   "h-9 rounded-md border border-input bg-transparent px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring";
-
-/** provider/model 当前值不在目录里时，把它本身渲染成一个兜底选项，避免下拉显示为空。 */
-function FallbackOption({ show, value }: { show: boolean; value: string }) {
-  if (!show || !value) return null;
-  return <option value={value}>{value}</option>;
-}
 
 function PresetPromptField({
   value,
