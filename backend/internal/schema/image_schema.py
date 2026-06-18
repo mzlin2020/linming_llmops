@@ -14,7 +14,7 @@ class TextToImageReq(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=2000, description="文本提示词")
     provider: Optional[str] = Field(default=None, max_length=64, description="生图 provider（缺省走默认）")
     model: Optional[str] = Field(default=None, max_length=128, description="生图模型（缺省走默认）")
-    size: Optional[str] = Field(default=None, max_length=32, description="尺寸，如 1024x1024（缺省由上游取默认）")
+    size: Optional[str] = Field(default=None, max_length=32, description="尺寸，如 2048x2048 / 2560x1440 / 4K（部分模型要求≥约369万像素；缺省由上游取默认）")
     guidance_scale: Optional[float] = Field(default=None, ge=1, le=10, description="提示词相关性（仅部分模型支持）")
 
 

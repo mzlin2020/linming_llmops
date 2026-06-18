@@ -18,7 +18,7 @@ export function ImageGenerationPage() {
   const qc = useQueryClient();
   const [mode, setMode] = useState<ImageGenType>("text2img");
   const [prompt, setPrompt] = useState("");
-  const [size, setSize] = useState<string>(IMAGE_SIZE_PRESETS[0]);
+  const [size, setSize] = useState<string>(IMAGE_SIZE_PRESETS[0].value);
   const [imageUrl, setImageUrl] = useState("");
   const [page, setPage] = useState(1);
   const [preview, setPreview] = useState<GeneratedImage | null>(null);
@@ -110,8 +110,8 @@ export function ImageGenerationPage() {
               aria-label="尺寸"
             >
               {IMAGE_SIZE_PRESETS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
+                <option key={s.value} value={s.value}>
+                  {s.label}
                 </option>
               ))}
             </select>

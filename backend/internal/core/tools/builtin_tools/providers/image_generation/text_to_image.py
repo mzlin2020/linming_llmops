@@ -20,7 +20,7 @@ from internal.lib.helper import add_attribute
 
 class TextToImageArgsSchema(BaseModel):
     prompt: str = Field(description="对要生成图片的详细文字描述，越具体越好")
-    size: str = Field(default="1024x1024", description="图片尺寸，如 1024x1024（缺省 1024x1024；部分模型支持其它尺寸）")
+    size: str = Field(default="2048x2048", description="图片尺寸，如 2048x2048 / 2560x1440 / 4K（部分模型要求≥约369万像素，更小会被上游以 400 拒绝）")
 
 
 class TextToImageTool(BaseTool):

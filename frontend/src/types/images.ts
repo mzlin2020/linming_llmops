@@ -34,5 +34,12 @@ export interface ImageToImageReq extends TextToImageReq {
   image_url: string;
 }
 
-/** 常用尺寸预设（OpenAI 兼容生图常见值；模型不支持时上游会报错）。 */
-export const IMAGE_SIZE_PRESETS = ["1024x1024", "1024x1792", "1792x1024", "512x512"] as const;
+/** 常用尺寸预设（满足主流生图模型 ≥ 约369万像素的最小要求；模型不支持时上游会报错）。 */
+export const IMAGE_SIZE_PRESETS = [
+  { value: "2048x2048", label: "1:1 · 2048×2048" },
+  { value: "2304x1728", label: "4:3 · 2304×1728" },
+  { value: "1728x2304", label: "3:4 · 1728×2304" },
+  { value: "2560x1440", label: "16:9 · 2560×1440" },
+  { value: "1440x2560", label: "9:16 · 1440×2560" },
+  { value: "4K", label: "4K · 更大更慢" },
+] as const;
