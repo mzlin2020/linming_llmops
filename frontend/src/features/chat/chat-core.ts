@@ -94,6 +94,19 @@ export function extractImageUrls(observation: string): string[] {
   return out;
 }
 
+/** 把 content 里指向 `urls` 的图片 markdown `![alt](url)` 整段去掉（纯函数，便于单测）。
+ * 用途：工具生成的图片统一由助手气泡下方的稳定图片块渲染；若模型最终答案又把同一张图复述进正文，
+ * 这里从正文剔除，避免「图片块 ↔ 正文 Markdown」两处来回交接导致 <img> 重新拉取而闪烁/消失。
+ * 仅剔除命中 urls 的图片语法，其它图片/链接/文本一律保留。 */
+export function stripImageMarkdown(content: string, urls: string[] | undefined): string {
+  if (!content || !urls || urls.length === 0) return content;
+  const set = new Set(urls);
+  return content
+    .replace(IMAGE_MD_RE, (full, url) => (set.has(url) ? "" : full))
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export interface ChatState {
   messages: ChatMessage[];
 }

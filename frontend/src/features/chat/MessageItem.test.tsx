@@ -43,16 +43,23 @@ describe("MessageItem 助手生成图片", () => {
     expect(img.src).toContain("/api/images/file/abc.png");
   });
 
-  it("URL 已出现在正文里时不重复渲染（避免模型复述导致双图）", () => {
+  it("模型把同一张图复述进正文时只渲染一次（正文图片 markdown 被剔除，图片仅由稳定块承载）", () => {
     const msg: ChatMessage = {
       key: "a-2",
       role: "assistant",
-      content: "![猫](/api/images/file/abc.png)",
+      content: "这是结果：![猫](/api/images/file/abc.png)",
       status: "done",
       generatedImages: ["/api/images/file/abc.png"],
     };
     render(<MessageItem message={msg} />);
-    // 正文 markdown 已渲染该图，生成图片块不应再渲染同一 URL
-    expect(screen.queryByAltText("生成图片")).toBeNull();
+    // 正文里的图片 markdown 被剔除（不再有 alt="猫" 的重复图），图片仅由生成图片块渲染一次
+    expect(screen.queryByAltText("猫")).toBeNull();
+    const imgs = screen.getAllByRole("img").filter((el) =>
+      (el as HTMLImageElement).src.includes("/api/images/file/abc.png"),
+    );
+    expect(imgs).toHaveLength(1);
+    expect(screen.getByAltText("生成图片")).toBeInTheDocument();
+    // 正文文字保留
+    expect(screen.getByText(/这是结果/)).toBeInTheDocument();
   });
 });

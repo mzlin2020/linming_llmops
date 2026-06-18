@@ -5,6 +5,7 @@ import {
   historyToMessages,
   initialState,
   reducer,
+  stripImageMarkdown,
   type ChatMessage,
   type ChatState,
   type HistoryRound,
@@ -59,6 +60,38 @@ describe("extractImageUrls 从工具 observation 抽取图片", () => {
 
   it("空/无效输入回退空数组", () => {
     expect(extractImageUrls("")).toEqual([]);
+  });
+});
+
+describe("stripImageMarkdown 从正文剔除已由图片块渲染的同名图片", () => {
+  it("剔除命中 url 的图片 markdown，保留其余文字", () => {
+    const out = stripImageMarkdown("这是结果：![猫](/api/images/file/abc.png)", [
+      "/api/images/file/abc.png",
+    ]);
+    expect(out).toBe("这是结果：");
+  });
+
+  it("只剔除命中的，未命中的图片/普通链接保留", () => {
+    const out = stripImageMarkdown(
+      "![a](/api/images/file/a.png) 看 ![b](/keep/b.png) 与 [文档](https://x/doc)",
+      ["/api/images/file/a.png"],
+    );
+    expect(out).toContain("![b](/keep/b.png)");
+    expect(out).toContain("[文档](https://x/doc)");
+    expect(out).not.toContain("/api/images/file/a.png");
+  });
+
+  it("urls 为空或 content 为空时原样返回", () => {
+    expect(stripImageMarkdown("![a](/x.png)", [])).toBe("![a](/x.png)");
+    expect(stripImageMarkdown("![a](/x.png)", undefined)).toBe("![a](/x.png)");
+    expect(stripImageMarkdown("", ["/x.png"])).toBe("");
+  });
+
+  it("剔除后压缩多余空行", () => {
+    const out = stripImageMarkdown("上\n\n![x](/api/images/file/x.png)\n\n下", [
+      "/api/images/file/x.png",
+    ]);
+    expect(out).toBe("上\n\n下");
   });
 });
 

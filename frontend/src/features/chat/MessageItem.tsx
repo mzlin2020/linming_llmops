@@ -6,7 +6,7 @@ import { FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { AiBadge } from "./AiBadge";
-import type { ChatMessage } from "./chat-core";
+import { type ChatMessage, stripImageMarkdown } from "./chat-core";
 import { ThinkingIndicator } from "./ThinkingIndicator";
 
 // 模块级常量：避免每次渲染新建数组（MessageItem 已 memo，新数组会削弱其稳定性）。
@@ -62,9 +62,10 @@ function UserAttachments({ message }: { message: ChatMessage }) {
 }
 
 /** 助手气泡下方：工具（文生图/图生图）产出的图片缩略图（点击新开原图）。
- * 过滤掉已出现在正文 markdown 里的 URL，避免模型复述时与正文图重复渲染。 */
+ * 作为这些图片的**唯一稳定渲染位**（以 url 为 key），正文里同名图片 markdown 已被 stripImageMarkdown 剔除，
+ * 故不会与正文重复，也不会因「图片块 ↔ 正文」交接而重新拉取导致闪烁/消失。 */
 function GeneratedImages({ message }: { message: ChatMessage }) {
-  const urls = (message.generatedImages ?? []).filter((u) => !message.content.includes(u));
+  const urls = message.generatedImages ?? [];
   if (urls.length === 0) return null;
   return (
     <div className="mt-2 flex flex-wrap gap-2">
@@ -99,6 +100,8 @@ export const MessageItem = memo(function MessageItem({ message }: { message: Cha
 
   const streaming = message.status === "sending" || message.status === "streaming";
   const thinking = !message.content && streaming;
+  // 工具生成的图片统一由下方稳定图片块渲染，正文里同名图片 markdown 剔除，避免重复渲染与闪烁。
+  const body = stripImageMarkdown(message.content, message.generatedImages);
 
   return (
     <div className="flex gap-3">
@@ -106,11 +109,11 @@ export const MessageItem = memo(function MessageItem({ message }: { message: Cha
       <div className="min-w-0 flex-1 pt-0.5">
         {thinking ? (
           <ThinkingIndicator />
-        ) : (
+        ) : body ? (
           <div className={cn(MARKDOWN_PROSE, message.status === "error" && "text-destructive/90")}>
-            <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{message.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={REMARK_PLUGINS}>{body}</ReactMarkdown>
           </div>
-        )}
+        ) : null}
         <GeneratedImages message={message} />
       </div>
     </div>
