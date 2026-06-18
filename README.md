@@ -9,6 +9,43 @@
 
 ---
 
+## 📸 界面预览
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="Feature-screenshots/01-home.png" alt="首页 · AI 助手" width="100%"><br>
+      <sub><b>首页</b> · 开箱即用的 AI 助手对话（流式 SSE、可切模型、预设开场白）</sub>
+    </td>
+    <td width="50%">
+      <img src="Feature-screenshots/02-app-orchestration.png" alt="应用编排" width="100%"><br>
+      <sub><b>应用编排</b> · 配模型 / 工具 / 知识库 / 工作流，右侧实时调试，一键发布</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="Feature-screenshots/03-plugins.png" alt="插件" width="100%"><br>
+      <sub><b>插件</b> · 内置工具（搜索 / 时间 / 百科 / 生图）+ 自定义 API 工具，分类浏览</sub>
+    </td>
+    <td width="50%">
+      <img src="Feature-screenshots/04-knowledge-base.png" alt="知识库" width="100%"><br>
+      <sub><b>知识库</b> · 文档自动切分为片段，含字符 / Token / 命中数，可启用与编辑</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="Feature-screenshots/05-workflow.png" alt="工作流编排" width="100%"><br>
+      <sub><b>工作流编排</b> · 拖拽 8 类节点连成 DAG，右侧逐节点流式调试运行</sub>
+    </td>
+    <td width="50%">
+      <img src="Feature-screenshots/06-image-generation.png" alt="图像生成" width="100%"><br>
+      <sub><b>图像生成</b> · 文生图 / 图生图 + 历史画廊，也作为内置工具供 Agent 出图</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## ✨ 功能特性
 
 - **应用编排** — 创建并配置 AI 应用（模型、提示词、工具、知识库、对话开场白等 14 项配置），一处编排、多处调用。
