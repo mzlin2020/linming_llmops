@@ -42,6 +42,9 @@ openpyxl>=3.1                     # Excel xlsx（自实现单元格读取）
 # 文本 / token 工具
 tiktoken>=0.8
 
+# 图像归一化：文生图/图生图落盘前重编码为干净 JPEG（剥离 C2PA/EXIF 等元数据），web 进程生成时用，轻量
+Pillow>=10
+
 # ===== Phase 3b：agent / 工作流编排（langgraph 状态机；纯 Python）=====
 # agent 包顶层 import（FunctionCallAgent / AgentState(MessagesState)），故进基础依赖。
 # 内置工具的 ddgs(duckduckgo) / wikipedia 是工厂内懒导入，按需安装，不进基础依赖。

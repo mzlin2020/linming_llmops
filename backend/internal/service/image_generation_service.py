@@ -114,6 +114,9 @@ class ImageGenerationService:
 
         data0 = (data[0] if data else None) or {}
         img_bytes, mime, ext = self._fetch_image(data0.get("url"), data0.get("b64_json"))
+        # 归一化为干净标准 JPEG：剥掉厂商嵌入的 C2PA/JUMBF 等非常规元数据块，
+        # 这类元数据会让 CDN/边缘与「直接打开」无法渲染图片；重编码后任何浏览器/CDN 都能显示。
+        img_bytes, mime, ext = self._normalize_image(img_bytes, mime, ext)
 
         name = f"{uuid4().hex}.{ext}"
         self.storage_service.save(f"{_STORAGE_PREFIX}/{name}", img_bytes)
@@ -155,6 +158,23 @@ class ImageGenerationService:
         except Exception as e:
             raise FailException(message=f"图像生成失败：取回图片出错（{str(e)[:120]}）")
         return data, mime, _MIME_EXT.get(mime, "png")
+
+    @staticmethod
+    def _normalize_image(data: bytes, mime: str, ext: str) -> tuple[bytes, str, str]:
+        """重编码为干净 baseline JPEG（丢弃 C2PA/EXIF 等元数据，体积更小、通用可渲染）。
+        懒导入 Pillow；缺库或解码失败时原样返回入参，保证零回归（不重建镜像也不影响现状）。"""
+        try:
+            import io
+
+            from PIL import Image
+
+            with Image.open(io.BytesIO(data)) as im:
+                im = im.convert("RGB")
+                out = io.BytesIO()
+                im.save(out, format="JPEG", quality=90, optimize=True)
+            return out.getvalue(), "image/jpeg", "jpg"
+        except Exception:
+            return data, mime, ext
 
     @staticmethod
     def _to_dict(record: AiImage) -> dict:
