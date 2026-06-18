@@ -55,5 +55,24 @@ def seed_bootstrap_account():
     print(f"[seed] 已创建初始账号：{email}")
 
 
+@app.cli.command("seed-llm-catalog")
+def seed_llm_catalog():
+    """幂等地把 providers/ 下的 YAML 内置模型目录灌入 DB；SEED_LLM_CATALOG 关闭则跳过。
+
+    按 provider.name 跳过已存在项——不覆盖用户在管理面的改动。受 ENABLE_LLM_ADMIN 影响为否。
+    """
+    from internal.service import LlmSeedService
+
+    if not app.config.get("SEED_LLM_CATALOG"):
+        print("[seed] SEED_LLM_CATALOG=false，跳过内置模型目录")
+        return
+    seed_service = injector.get(LlmSeedService)
+    result = seed_service.seed_builtin_catalog()
+    print(
+        f"[seed] 内置模型目录：新增 {result['imported']} 个提供商 / "
+        f"{result['models']} 个模型，跳过 {result['skipped']} 个已存在"
+    )
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)

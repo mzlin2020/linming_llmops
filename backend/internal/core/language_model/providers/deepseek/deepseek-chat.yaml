@@ -1,0 +1,29 @@
+model_name: deepseek-chat
+label:
+  zh_Hans: DeepSeek Chat
+  en_US: DeepSeek Chat
+model_type: chat
+features:
+  - tool_call
+  - streaming
+context_window: 65536
+max_output_tokens: 8192
+parameter_rules:
+  - name: temperature
+    type: float
+    default: 0.7
+    min: 0
+    max: 2
+  - name: max_tokens
+    type: int
+    default: 4096
+    min: 1
+    max: 8192
+pricing:
+  input: 2.0
+  output: 8.0
+  unit: "0.000001"
+  currency: RMB
+is_default: true
+enabled: true
+sort: 1

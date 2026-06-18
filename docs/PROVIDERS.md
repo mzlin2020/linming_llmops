@@ -64,12 +64,30 @@ CHANNEL_COOLDOWN_SECONDS=300     # 熔断冷却秒数
 AGENT_MAX_ITERATIONS=5           # Agent 单次最多工具调用轮数
 ```
 
-### 模型目录写入面开关
+### 模型目录：开箱预置 + 自定义
+
+模型目录是一份 **DB 化、全局共享**的 provider/model 表（无 `user_id`，所有登录用户共用）。来源有两条：
+
+**① YAML 内置预置（开箱即有）** —— 仓库自带 `backend/internal/core/language_model/providers/<name>/` 下的 `provider.yaml` + 模型卡 `*.yaml`，开机由 `seed-llm-catalog` 命令幂等灌入 DB。预置 4 个供应商：`openai`、`anthropic`、`deepseek`，以及一个通用的 **「OpenAI 兼容网关」**（`openai_compatible`，默认禁用、作模板）。配好对应 `*_API_KEY` 环境变量即可用（密钥不入仓，运行期从 `api_key_env` 兜底）。
 
 ```ini
-ENABLE_LLM_ADMIN=false           # 默认关；涉及全局共享凭证目录，仅可信单运维部署开启
+SEED_LLM_CATALOG=true            # 默认开；按 provider 名跳过已存在项，绝不覆盖你的改动。设 false 关闭预置
+# 「OpenAI 兼容网关」内置 provider 的凭证（接自建网关 / 聚合中转 / 第三方兼容服务）：
+CUSTOM_LLM_API_KEY=
+CUSTOM_LLM_BASE_URL=
+```
+
+> 新增内置供应商随版本发布补齐；既有供应商的演进交给下面的管理面——种子绝不覆盖你在管理面的改动。
+
+**② 管理面自定义（增删改）** —— 开启 `ENABLE_LLM_ADMIN=true` 后，「设置 → 模型」页从只读变为可**增删改提供商与模型、填 API Key**。可接入任意第三方 OpenAI/Anthropic 兼容接口：建一个 provider（选 `openai` 或 `anthropic` 协议、填 base_url + key），在其下加模型即可；新增模型立即出现在首页助手 / 编排页的模型选择器里。
+
+```ini
+ENABLE_LLM_ADMIN=false           # 默认关；模型目录含全局共享凭证、且本项目无管理员/角色概念，
+                                 # 故仅自部署/单运维场景按需开启（多用户部署应保持关闭）
 API_KEY_PREFIX=ak-v1/            # OpenAPI 对外 Key 前缀（中性默认，可改）
 ```
+
+> **新增一个协议**：现有 `openai` / `anthropic` 已覆盖绝大多数第三方兼容接口。若上游是非兼容的私有协议，在 `providers/base.py` 写一个 `BaseLanguageModelProvider` 子类（实现 `_instantiate_chat`）并注册进 `_PROTOCOL_REGISTRY` 即可——Service / Handler / Manager / 前端 / 数据库均无需改动，该协议会自动出现在管理面「协议」下拉里。
 
 ---
 

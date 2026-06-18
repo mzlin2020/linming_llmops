@@ -9,6 +9,8 @@ if [[ "${MIGRATION_ENABLED}" == "true" ]]; then
     echo "[entrypoint] Seeding bootstrap account ..."
     flask --app app.http.app seed-bootstrap-account || true
   fi
+  echo "[entrypoint] Seeding LLM catalog ..."
+  flask --app app.http.app seed-llm-catalog || true
 fi
 
 if [[ "${MODE}" == "celery" ]]; then

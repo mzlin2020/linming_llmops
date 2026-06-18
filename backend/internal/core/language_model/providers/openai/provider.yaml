@@ -1,0 +1,16 @@
+# OpenAI 官方（Chat Completions 协议）。
+# 字段对齐 ai_llm_provider 列：base_url 为静态默认值；密钥不入仓，运行期由 api_key_env 指向的环境变量兜底。
+name: openai
+label:
+  zh_Hans: OpenAI
+  en_US: OpenAI
+description:
+  zh_Hans: OpenAI 官方 API（Chat Completions 协议）
+  en_US: OpenAI official API (Chat Completions)
+supported_model_types:
+  - chat
+protocol: openai
+base_url: https://api.openai.com/v1
+api_key_env: OPENAI_API_KEY
+enabled: true
+sort: 10

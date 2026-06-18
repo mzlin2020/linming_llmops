@@ -22,6 +22,7 @@ from .language_model_service import LanguageModelService
 from .builtin_tool_service import BuiltinToolService
 from .stats_service import StatsService
 from .llm_admin_service import LlmAdminService
+from .llm_seed_service import LlmSeedService
 from .openapi_service import OpenAPIService
 from .workflow_service import WorkflowService
 from .image_generation_service import ImageGenerationService
@@ -54,6 +55,7 @@ __all__ = [
     "BuiltinToolService",
     "StatsService",
     "LlmAdminService",
+    "LlmSeedService",
     "OpenAPIService",
     # 工作流（v1.1）
     "WorkflowService",

@@ -1,0 +1,16 @@
+# Anthropic 官方（Messages /v1/messages 原生协议）。
+# 走 protocol=anthropic；第三方中转若只暴露 OpenAI 兼容面，请改用 openai 协议另建 provider。
+name: anthropic
+label:
+  zh_Hans: Anthropic Claude
+  en_US: Anthropic Claude
+description:
+  zh_Hans: Anthropic 官方 API（Messages 原生协议）
+  en_US: Anthropic official API (native Messages)
+supported_model_types:
+  - chat
+protocol: anthropic
+base_url: https://api.anthropic.com
+api_key_env: ANTHROPIC_API_KEY
+enabled: true
+sort: 20

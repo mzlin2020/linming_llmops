@@ -129,6 +129,8 @@ class Config:
         self.API_KEY_PREFIX = _get_env("API_KEY_PREFIX")
         # AI 模型目录管理写入面开关（部署级特性开关，默认关）
         self.ENABLE_LLM_ADMIN = _get_bool_env("ENABLE_LLM_ADMIN")
+        # 开机把 providers/ 下 YAML 内置目录幂等灌入 DB（默认开；与 ENABLE_LLM_ADMIN 相互独立）
+        self.SEED_LLM_CATALOG = _get_bool_env("SEED_LLM_CATALOG")
 
         # 知识库配额/限流（无管理员概念，对所有账号统一生效）
         self.QUOTA_MAX_DATASETS_PER_USER = int(_get_env("QUOTA_MAX_DATASETS_PER_USER"))

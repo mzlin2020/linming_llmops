@@ -1,0 +1,17 @@
+# 通用 OpenAI 兼容入口：自建网关 / 聚合中转 / 任意第三方 OpenAI 兼容服务（含国内聚合平台）。
+# 完全通用化——不含任何具体厂商地址或私有品牌：base_url 留空、密钥走 CUSTOM_LLM_API_KEY 环境变量。
+# 默认 enabled=false（作为模板预置）：运维在「设置 → 模型」里填好 base_url + API Key、改/加模型后再启用。
+name: openai_compatible
+label:
+  zh_Hans: OpenAI 兼容网关（自定义）
+  en_US: OpenAI-Compatible Gateway (Custom)
+description:
+  zh_Hans: 通用 OpenAI 兼容入口。在「设置 → 模型」里填 base_url 与 API Key、按需改模型名后启用即可接任意兼容服务。
+  en_US: Generic OpenAI-compatible endpoint. Set base_url and API key under Settings → Models, adjust the model name, then enable.
+supported_model_types:
+  - chat
+protocol: openai
+base_url: ""
+api_key_env: CUSTOM_LLM_API_KEY
+enabled: false
+sort: 40

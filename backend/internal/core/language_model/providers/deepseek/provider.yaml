@@ -1,0 +1,15 @@
+# DeepSeek 官方（OpenAI 兼容协议）。公开端点，全球可达。
+name: deepseek
+label:
+  zh_Hans: DeepSeek
+  en_US: DeepSeek
+description:
+  zh_Hans: 深度求索官方 API（OpenAI 兼容）
+  en_US: DeepSeek official API (OpenAI-compatible)
+supported_model_types:
+  - chat
+protocol: openai
+base_url: https://api.deepseek.com
+api_key_env: DEEPSEEK_API_KEY
+enabled: true
+sort: 30

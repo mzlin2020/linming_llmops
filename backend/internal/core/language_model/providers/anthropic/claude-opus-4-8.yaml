@@ -1,0 +1,29 @@
+model_name: claude-opus-4-8
+label:
+  zh_Hans: Claude Opus 4.8
+  en_US: Claude Opus 4.8
+model_type: chat
+features:
+  - tool_call
+  - vision
+  - streaming
+context_window: 200000
+max_output_tokens: 8192
+parameter_rules:
+  - name: temperature
+    type: float
+    default: 0.7
+    min: 0
+    max: 1
+  - name: max_tokens
+    type: int
+    default: 4096
+    min: 1
+    max: 8192
+pricing:
+  input: 15.0
+  output: 75.0
+  unit: "0.000001"
+  currency: USD
+enabled: true
+sort: 2

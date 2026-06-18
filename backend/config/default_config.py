@@ -93,6 +93,8 @@ DEFAULT_CONFIG = {
     "API_KEY_PREFIX": "ak-v1/",
     # AI 模型目录管理写入面开关（全局共享目录含凭证，默认关；单运维部署可开启）
     "ENABLE_LLM_ADMIN": "false",
+    # 开机把 providers/ 下的 YAML 内置目录幂等灌入 DB（默认开；按 name 跳过已存在，不覆盖用户改动）
+    "SEED_LLM_CATALOG": "true",
 
     # 知识库配额/限流（无管理员概念，对所有账号统一）
     "QUOTA_MAX_DATASETS_PER_USER": 3,

@@ -1,0 +1,29 @@
+model_name: gpt-4o
+label:
+  zh_Hans: GPT-4o
+  en_US: GPT-4o
+model_type: chat
+features:
+  - tool_call
+  - vision
+  - streaming
+context_window: 128000
+max_output_tokens: 16384
+parameter_rules:
+  - name: temperature
+    type: float
+    default: 0.7
+    min: 0
+    max: 2
+  - name: max_tokens
+    type: int
+    default: 4096
+    min: 1
+    max: 16384
+pricing:
+  input: 2.5
+  output: 10.0
+  unit: "0.000001"
+  currency: USD
+enabled: true
+sort: 1

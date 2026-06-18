@@ -1,0 +1,23 @@
+model_name: deepseek-reasoner
+label:
+  zh_Hans: DeepSeek Reasoner
+  en_US: DeepSeek Reasoner
+model_type: chat
+features:
+  - reasoning
+  - streaming
+context_window: 65536
+max_output_tokens: 8192
+parameter_rules:
+  - name: max_tokens
+    type: int
+    default: 4096
+    min: 1
+    max: 8192
+pricing:
+  input: 4.0
+  output: 16.0
+  unit: "0.000001"
+  currency: RMB
+enabled: true
+sort: 2

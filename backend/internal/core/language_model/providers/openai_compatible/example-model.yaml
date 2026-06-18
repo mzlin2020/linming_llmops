@@ -1,0 +1,24 @@
+# 示范模型卡（模板）：把 model_name 改成你的上游模型名（如聚合平台上托管的某模型）。
+model_name: example-model
+label:
+  zh_Hans: 示例模型（请改成你的模型名）
+  en_US: Example model (rename to yours)
+model_type: chat
+features:
+  - tool_call
+  - streaming
+context_window: 32768
+max_output_tokens: 4096
+parameter_rules:
+  - name: temperature
+    type: float
+    default: 0.7
+    min: 0
+    max: 2
+  - name: max_tokens
+    type: int
+    default: 2048
+    min: 1
+    max: 4096
+enabled: true
+sort: 1
