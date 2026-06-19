@@ -81,6 +81,22 @@ services:
       MODE: api
       MIGRATION_ENABLED: "true"
       FLASK_ENV: ${FLASK_ENV:-production}
+      # 应用侧基础设施连接：容器网络内固定值，从 compose 服务名 / 单一 MYSQL_ROOT_PASSWORD 派生。
+      # 用户无需在 .env 重复维护（compose environment 覆盖 env_file）。
+      mysql_server_host: mysql
+      mysql_server_port: "3306"
+      mysql_server_username: root
+      mysql_server_password: ${MYSQL_ROOT_PASSWORD:-changeme}
+      mysql_server_database: ${MYSQL_DATABASE:-linming_llmops}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "2"
+      CELERY_BROKER_DB: "3"
+      CELERY_RESULT_BACKEND_DB: "4"
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_GRPC_PORT: "6334"
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
     depends_on:
       mysql:
         condition: service_healthy
@@ -112,6 +128,21 @@ services:
       MODE: celery
       MIGRATION_ENABLED: "false"
       FLASK_ENV: ${FLASK_ENV:-production}
+      # 应用侧基础设施连接：与 backend 同一组固定值（compose environment 覆盖 env_file）。
+      mysql_server_host: mysql
+      mysql_server_port: "3306"
+      mysql_server_username: root
+      mysql_server_password: ${MYSQL_ROOT_PASSWORD:-changeme}
+      mysql_server_database: ${MYSQL_DATABASE:-linming_llmops}
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "2"
+      CELERY_BROKER_DB: "3"
+      CELERY_RESULT_BACKEND_DB: "4"
+      QDRANT_HOST: qdrant
+      QDRANT_PORT: "6333"
+      QDRANT_GRPC_PORT: "6334"
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
     depends_on:
       mysql:
         condition: service_healthy

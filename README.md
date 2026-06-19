@@ -122,7 +122,7 @@ bash deploy/smoke-test.sh
 
 ## ⚙️ 配置参考
 
-完整配置（含分组注释）见 [`deploy/.env.example`](deploy/.env.example)。最常用的几项：
+`deploy/.env.example` 是精简模板（只列必填与最常用项）；完整可调项参考见 [`deploy/README.md`](deploy/README.md#完整变量参考)。最常用的几项：
 
 | 变量 | 作用 | 生产是否必改 |
 |---|---|---|

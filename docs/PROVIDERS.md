@@ -1,8 +1,8 @@
 # 供应商与模型配置指南 / Providers & Models
 
-> How to configure LLM providers, the local embedding model, and optional image/TTS in `linming_llmops`. All values live in `deploy/.env.example`; copy it to `deploy/.env` and edit.
+> How to configure LLM providers, the local embedding model, and optional image/TTS in `linming_llmops`. The variables below go in `deploy/.env` (copied from `deploy/.env.example`); the slim template lists only the common ones — set any others shown here directly in `.env`. Full reference: [`deploy/README.md`](../deploy/README.md#完整变量参考).
 
-本文说明对话用的 **LLM 供应商**、知识库用的**本地嵌入模型**、以及可选的**图像/TTS**如何配置。所有变量在 [`deploy/.env.example`](../deploy/.env.example) 中分组列出。
+本文说明对话用的 **LLM 供应商**、知识库用的**本地嵌入模型**、以及可选的**图像/TTS**如何配置。下列变量写进 `deploy/.env`（从 [`deploy/.env.example`](../deploy/.env.example) 复制而来）——精简模板只列了最常用项，其余按需直接加进 `.env` 即可，完整清单见 [`deploy/README.md`](../deploy/README.md#完整变量参考)。
 
 ---
 

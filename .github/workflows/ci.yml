@@ -115,7 +115,6 @@ jobs:
           # 注入 CI 测试值（仅本 job 用，绝非生产密钥）
           {
             echo "MYSQL_ROOT_PASSWORD=ci-changeme"
-            echo "mysql_server_password=ci-changeme"
             echo "JWT_SECRET=ci-test-secret-please-change"
             echo "AI_SECRET_ENCRYPT_KEY=ci-test-encrypt-key"
             echo "INSTALL_ML=true"
